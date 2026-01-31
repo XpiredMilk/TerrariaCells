@@ -227,6 +227,13 @@ namespace TerrariaCells.Common.GlobalProjectiles
                         modifiers.CritDamage += 0.25f;
                     }
                     break;
+                case ProjectileID.DD2FlameBurstTowerT1Shot:
+                    if (target.HasBuff(BuffID.Oiled))
+                    {
+                        modifiers.SetCrit();
+                        Projectile.NewProjectileDirect(projectile.GetSource_OnHit(target), target.Center, Vector2.Zero, ProjectileID.Volcano, projectile.damage, modifiers.GetKnockback(projectile.knockBack), Main.myPlayer, ai1: 1);
+                    }
+                    break;
             }
 
 			if (projectile.TryGetGlobalProjectile(out SourceGlobalProjectile gProj) && gProj.itemSource != null)

@@ -19,6 +19,7 @@ using static TerrariaCells.Common.Systems.AbilityConditions;
 using TerrariaCells.Common.ModPlayers;
 using TerrariaCells.Common.GlobalItems;
 using Terraria.Localization;
+using Terraria.WorldBuilding;
 
 //Genuinely, I'm just using this for anything that I deem sufficiently complex
 //Involving multiple parts working together to form one collective piece (a "system of parts" if you will)
@@ -59,6 +60,7 @@ namespace TerrariaCells.Common.Systems
 			RegisterAbility(ItemID.StaffoftheFrostHydra, new Ability(NumberHelpers.SecToFrames(30), 10.SecToFrames()));
 			RegisterAbility(ItemID.DD2ExplosiveTrapT1Popper, new Ability(NumberHelpers.SecToFrames(30), 30.SecToFrames(), new LineOfSight(), new InSolidTile().Invert()));
 			RegisterAbility(ItemID.DD2LightningAuraT1Popper, new Ability(NumberHelpers.SecToFrames(60), NumberHelpers.SecToFrames(30)));
+			RegisterAbility(ItemID.DD2FlameburstTowerT1Popper, new Ability(NumberHelpers.SecToFrames(60), NumberHelpers.SecToFrames(30)));
 			RegisterAbility(ItemID.MolotovCocktail, new Ability(NumberHelpers.SecToFrames(15)));
 			RegisterAbility(ItemID.BouncyDynamite, new Ability(NumberHelpers.SecToFrames(60)));
 			//RegisterAbility(ItemID.BouncingShield, new Ability(NumberHelpers.SecToFrames(6)));
@@ -465,6 +467,9 @@ namespace TerrariaCells.Common.Systems
 					break;
 				case ItemID.DD2LightningAuraT1Popper:
 					item.damage = 7;
+					break;
+				case ItemID.DD2FlameburstTowerT1Popper:
+					item.damage = 10;
 					break;
 				case ItemID.ManaPotion:
 					item.healMana = 200;
