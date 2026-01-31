@@ -451,6 +451,7 @@ Tooltips: {
 		IronskinPotion.Tooltip: 30% increased movement speed
 		WrathPotion.Tooltip: 25% increased damage
 		BouncyDynamite.Tooltip: This is a good idea
+		DD2FlameburstTowerT1Popper.Tooltip: Projectiles explode on oiled targets, inflicting critical strikes
 		# Accessories
 		BandofRegeneration.Tooltip: Killing an enemy heals you by 1% of your max HP
 		BerserkerGlove.Tooltip: Taking damage briefly increases melee damage by 30%
