@@ -54,6 +54,7 @@ namespace TerrariaCells.Common.Systems
 			RegisterAbility(ItemID.Beenade, new Ability(NumberHelpers.SecToFrames(10)));
 			RegisterAbility(ItemID.HornetStaff, new Ability(NumberHelpers.SecToFrames(30), NumberHelpers.SecToFrames(30)));
 			RegisterAbility(ItemID.SlimeStaff, new Ability(NumberHelpers.SecToFrames(30), NumberHelpers.SecToFrames(30)));
+			RegisterAbility(ItemID.ImpStaff, new Ability(NumberHelpers.SecToFrames(30), NumberHelpers.SecToFrames(30)));
 			RegisterAbility(ItemID.Grenade, new Ability(NumberHelpers.SecToFrames(5)));
 			RegisterAbility(ItemID.StaffoftheFrostHydra, new Ability(NumberHelpers.SecToFrames(30), 10.SecToFrames()));
 			RegisterAbility(ItemID.DD2ExplosiveTrapT1Popper, new Ability(NumberHelpers.SecToFrames(30), 30.SecToFrames(), new LineOfSight(), new InSolidTile().Invert()));
@@ -441,6 +442,9 @@ namespace TerrariaCells.Common.Systems
 				case ItemID.StormTigerStaff:
 				case ItemID.SlimeStaff:
 					item.damage = 6;
+					break;
+				case ItemID.ImpStaff:
+					item.damage = 7;
 					break;
 				case ItemID.Beenade:
 				case ItemID.ClingerStaff:
