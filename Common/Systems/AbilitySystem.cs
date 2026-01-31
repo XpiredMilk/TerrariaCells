@@ -58,6 +58,7 @@ namespace TerrariaCells.Common.Systems
 			RegisterAbility(ItemID.Grenade, new Ability(NumberHelpers.SecToFrames(5)));
 			RegisterAbility(ItemID.StaffoftheFrostHydra, new Ability(NumberHelpers.SecToFrames(30), 10.SecToFrames()));
 			RegisterAbility(ItemID.DD2ExplosiveTrapT1Popper, new Ability(NumberHelpers.SecToFrames(30), 30.SecToFrames(), new LineOfSight(), new InSolidTile().Invert()));
+			RegisterAbility(ItemID.DD2LightningAuraT1Popper, new Ability(NumberHelpers.SecToFrames(60), NumberHelpers.SecToFrames(30)));
 			RegisterAbility(ItemID.MolotovCocktail, new Ability(NumberHelpers.SecToFrames(15)));
 			RegisterAbility(ItemID.BouncyDynamite, new Ability(NumberHelpers.SecToFrames(60)));
 			//RegisterAbility(ItemID.BouncingShield, new Ability(NumberHelpers.SecToFrames(6)));
@@ -461,6 +462,9 @@ namespace TerrariaCells.Common.Systems
 					break;
 				case ItemID.DD2ExplosiveTrapT1Popper:
 					item.damage = 50;
+					break;
+				case ItemID.DD2LightningAuraT1Popper:
+					item.damage = 7;
 					break;
 				case ItemID.ManaPotion:
 					item.healMana = 200;
