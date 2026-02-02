@@ -5,6 +5,7 @@ using Terraria;
 using Terraria.ModLoader;
 using Terraria.ID;
 using TerrariaCells.Common.ModPlayers;
+using TerrariaCells.Content.Buffs;
 
 namespace TerrariaCells.Common.GlobalBuffs
 {
@@ -23,6 +24,10 @@ namespace TerrariaCells.Common.GlobalBuffs
                 case BuffID.MagicPower:
                     player.GetDamage(DamageClass.Magic) -= 0.2f; //0.2 - 0.2 => 0
                     player.manaCost = 0f;
+                    break;
+                case BuffID.Inferno:
+                    player.ClearBuff(type); //Remove vanilla inferno buff
+                    player.AddBuff(ModContent.BuffType<CustomInfernoBuff>(), 60*20);
                     break;
             }
         }

@@ -70,6 +70,7 @@ namespace TerrariaCells.Common.Systems
 			RegisterAbility(ItemID.WrathPotion, new Ability(NumberHelpers.SecToFrames(60), 20.SecToFrames()));
 			RegisterAbility(ItemID.MagicPowerPotion, new Ability(NumberHelpers.SecToFrames(100), 10.SecToFrames()));
 			RegisterAbility(ItemID.SwiftnessPotion, new Ability(NumberHelpers.SecToFrames(60), 20.SecToFrames()));
+			RegisterAbility(ItemID.InfernoPotion, new Ability(NumberHelpers.SecToFrames(80), 20.SecToFrames()));
             //RegisterAbility(ItemID.LifeCrystal, new Ability(0));
 		}
 
@@ -473,6 +474,9 @@ namespace TerrariaCells.Common.Systems
 					break;
 				case ItemID.ManaPotion:
 					item.healMana = 200;
+					break;
+				case ItemID.InfernoPotion:
+					item.damage = 5;
 					break;
 				case ItemID.Grenade:
 					item.damage = 40;

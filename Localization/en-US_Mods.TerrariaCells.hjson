@@ -395,6 +395,7 @@ Projectiles: {
 	BeeMissile.DisplayName: Bee Missile
 	BeeMissileBee.DisplayName: Bee
 	DripplerExplosion.DisplayName: Drippler Explosion
+	InfernoPotionProjectile.DisplayName: Inferno Potion Projectile
 }
 
 Tooltips: {
@@ -598,6 +599,11 @@ Buffs: {
 	ReconScope: {
 		DisplayName: Recon Scope
 		Description: +30% increased damage
+	}
+
+	CustomInfernoBuff: {
+		DisplayName: Inferno
+		Description: Mods.TerrariaCells.Buffs.CustomInfernoBuff.Description
 	}
 }
 
