@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria;
+using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.Utilities;
@@ -19,6 +20,17 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
         public override bool InstancePerEntity => true;
         public int CustomFrameCounter = 0;
         public int CustomFrameY = 0;
+        public override bool AppliesToEntity(NPC entity, bool lateInstantiation)
+        {
+            int type = entity.type;
+            return type == NPCID.DesertDjinn
+                || type == NPCID.CultistDevote
+                || type == NPCID.DiabolistRed
+                || type == NPCID.DiabolistWhite
+                || type == NPCID.RaggedCaster
+                || type == NPCID.RaggedCasterOpenCoat;
+        }
+
         public override void SetDefaults(NPC entity)
         {
             base.SetDefaults(entity);
@@ -81,8 +93,18 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
 
         public override bool PreAI(NPC npc)
         {
-			if (Common.Systems.AIOverwriteSystem.AITypeExists(npc.type))
-				return base.PreAI(npc);
+            //for diabolist and ragged caster, use existing AI but limit its aggro range
+            //so they don't fire from offscreen
+            if (npc.type == NPCID.DiabolistRed || npc.type == NPCID.DiabolistWhite ||
+                npc.type == NPCID.RaggedCaster || npc.type == NPCID.RaggedCasterOpenCoat)
+            {
+                npc.TargetClosest();
+                if (npc.HasValidTarget && !npc.TargetInAggroRange(Main.player[npc.target], 640))
+                {
+                    return false;
+                }
+            }
+
             if (npc.type != NPCID.DesertDjinn && npc.type != NPCID.CultistDevote)
                 return base.PreAI(npc);
 
@@ -101,6 +123,11 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
                 return CultistDevoteeAI(npc, target);
             }
             return base.PreAI(npc);
+        }
+
+        public override void OnSpawn(NPC npc, IEntitySource source)
+        {
+            CombatNPC.ToggleContactDamage(npc, false);
         }
 
         //teleport to a random position. teleports near the given position.

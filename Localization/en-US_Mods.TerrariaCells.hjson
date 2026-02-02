@@ -299,6 +299,16 @@ Items: {
 		DisplayName: Tick Timer
 		Tooltip: ""
 	}
+
+	SpawnInfoWand: {
+		DisplayName: Spawn Info Wand
+		Tooltip: ""
+	}
+
+	DungeonPylon: {
+		DisplayName: Dungeon Pylon
+		Tooltip: ""
+	}
 }
 
 Projectiles: {
@@ -330,6 +340,10 @@ Projectiles: {
 	TrailOfFlames.DisplayName: Fire Trail
 	IceArrowFriendly.DisplayName: Ice Arrow
 	IceSpikeFriendly.DisplayName: Ice Spike
+	BeeWallBee.DisplayName: Bee
+	BeeMissile.DisplayName: Bee Missile
+	BeeMissileBee.DisplayName: Bee
+	DripplerExplosion.DisplayName: Drippler Explosion
 }
 
 Tooltips: {
@@ -380,6 +394,16 @@ Buffs: {
 Tiles: {
 	CrimsonPylon.MapEntry: Crimson Pylon
 	HivePylon.MapEntry: Hive Pylon
+	DungeonPylon.MapEntry: Dungeon Pylon
 }
 
 NPCs.SWATHornet.DisplayName: SWAT Hornet
+levelInputEmptyContextText: Forest
+structureInputEmptyContextText: forest_1
+idInputEmptyContextText: Forest
+blankInputEmptyContextText: _
+
+unlocks: {
+	goblin: Unlocked the Goblin Tinkerer!
+	cloud: Unlocked double jump!
+}

@@ -38,7 +38,7 @@ namespace TerrariaCells.Common.GlobalNPCs
 
         private void ModifyDropHeals(On_NPC.orig_NPCLoot_DropHeals orig, NPC self, Player closestPlayer)
         {
-            if (self.lifeMax > 5 && !self.friendly && self.CanBeChasedBy() && !NPCID.Sets.ProjectileNPC[self.type])
+            if (!NPCID.Sets.NeverDropsResourcePickups[self.type] && self.lifeMax > 5 && !self.friendly && self.CanBeChasedBy() && !NPCID.Sets.ProjectileNPC[self.type])
                 DropFoodHeals.TryDroppingHeal(self, closestPlayer);
             return;
         }
@@ -91,14 +91,14 @@ namespace TerrariaCells.Common.GlobalNPCs
             switch (npc.type)
             {
                 case NPCID.BrainofCthulhu:
-                    npcLoot.Add(commonLesserHealthPotion);
-                    //npcLoot.Add(new CommonDrop(ItemID.CloudinaBottle, 1));
-                    npcLoot.Add(new ItemDropWithConditionRule(ItemID.CloudinaBottle, 1, 1, 1, new PowerDropRuleCondition(static mplayer => !mplayer.CloudJump)));
+                    npcLoot.Add(commonHealthPotion);
+                    npcLoot.Add(new DropPerPlayerOnThePlayer(ItemID.CloudinaBottle, 1, 1, 1, new PowerDropRuleCondition(static mplayer => !mplayer.CloudJump)));
                     break;
                 case NPCID.EyeofCthulhu:
                 case NPCID.KingSlime:
-                    npcLoot.Add(commonLesserHealthPotion);
-                    break;
+                case NPCID.EaterofWorldsHead:
+                case NPCID.EaterofWorldsBody:
+                case NPCID.EaterofWorldsTail:
                 case NPCID.SkeletronHead:
                 case NPCID.QueenBee:
                 case NPCID.Deerclops:

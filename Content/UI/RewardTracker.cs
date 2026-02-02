@@ -15,16 +15,16 @@ using Terraria.GameContent.UI.Elements;
 
 namespace TerrariaCells.Content.UI
 {
-    public class RewardTracker : DraggableWindow
+    public class RewardTracker : WindowState
     {
         internal override string Name => "RewardTrackerUI";
-        public override Rectangle GrabBox => this.Bounds;
+        //public override Rectangle GrabBox => this.Bounds;
 
         internal const int Padding = 8;
 
         private TimerPanel _timer;
         private DeathsPanel _deaths;
-        protected override void Init()
+        public override void OnInitialize()
         {
             Vector2 timerSize = Terraria.GameContent.FontAssets.MouseText.Value.MeasureString("00:00.00");
             timerSize += new Vector2(TimerPanel.Padding * 2, TimerPanel.Padding);
@@ -42,22 +42,31 @@ namespace TerrariaCells.Content.UI
 
             //Expand to fill each child
             WindowSize = new Vector2(timerSize.X, timerSize.Y + deathsSize.Y);
-            this.WindowPosition = new Vector2((Main.screenWidth - WindowSize.X) * 0.5f, NoDragZone);
+            //this.WindowPosition = new Vector2((Main.screenWidth - WindowSize.X) * 0.5f, 10);
+            this.Left.Set(-WindowSize.X * 0.5f, 0.5f);
+            this.Top.Set(10, 0);
             UpdateChildPositions(WindowPosition);
         }
 
         protected override void OnOpened()
         {
-            this.WindowPosition = new Vector2((Main.screenWidth - WindowSize.X) * 0.5f, NoDragZone);
+            //this.WindowPosition = new Vector2((Main.screenWidth - WindowSize.X) * 0.5f, 10);
+            this.Left.Set(-WindowSize.X * 0.5f, 0.5f);
+            this.Top.Set(10, 0);
             UpdateChildPositions(WindowPosition);
+            Recalculate();
         }
 
-        protected override void UpdateChildPositions(Vector2 newPosition)
+        protected void UpdateChildPositions(Vector2 newPosition)
         {
-            _timer.Left.Set(newPosition.X, 0);
+            /*_timer.Left.Set(newPosition.X, 0);
             _timer.Top.Set(newPosition.Y, 0);
             _deaths.Left.Set(newPosition.X + ((_timer.Width.Pixels - _deaths.Width.Pixels) * 0.5f), 0);
-            _deaths.Top.Set(newPosition.Y + _timer.Height.Pixels, 0);
+            _deaths.Top.Set(newPosition.Y + _timer.Height.Pixels, 0);*/
+            _timer.Left.Set(0, 0);
+            _timer.Top.Set(0, 0);
+            _deaths.Left.Set((_timer.Width.Pixels - _deaths.Width.Pixels) * 0.5f, 0);
+            _deaths.Top.Set(_timer.Height.Pixels, 0);
         }
 
         protected override bool PreDrawSelf(SpriteBatch spriteBatch)
@@ -74,9 +83,11 @@ namespace TerrariaCells.Content.UI
             Vector2 panelPos = bounds.TopLeft();
             Vector2 panelSize = bounds.Size();
 
-            UIHelper.PANEL.Draw(spriteBatch, bounds with { X = (int)(panelPos.X + (panelSize.Y * 0.5f)), Width = (int)(panelSize.X - (panelSize.Y * 0.5f)) }, UIHelper.InventoryColour);
+            bounds.X += (int)(panelSize.Y * 0.5f);
+            bounds.Width -= (int)(panelSize.Y * 0.5f);
+            UIHelper.PANEL.Draw(spriteBatch, bounds, UIHelper.InventoryColour);
 
-            TimeSpan currentTime = Main.LocalPlayer.GetModPlayer<Common.ModPlayers.RewardPlayer>().LevelTime;
+            TimeSpan currentTime = RewardTrackerSystem.LevelTime;
             string drawString = $"{currentTime.Minutes:00}:{currentTime.Seconds:00}";
             Vector2 size = Terraria.GameContent.FontAssets.MouseText.Value.MeasureString(drawString);
             Vector2 drawPos = new Vector2(panelPos.X + panelSize.Y + Padding, panelPos.Y + Padding);
@@ -91,14 +102,15 @@ namespace TerrariaCells.Content.UI
                 spriteBatch, Terraria.GameContent.FontAssets.MouseText.Value, drawString, drawPos, Color.SlateGray, 0f, Vector2.Zero, Vector2.One
             );*/
 
-            TimeSpan targetTime = Main.LocalPlayer.GetModPlayer<Common.ModPlayers.RewardPlayer>().targetTime;
+            TimeSpan targetTime = RewardTrackerSystem.targetTime;
             int watchType = (currentTime.TotalSeconds / (float)targetTime.TotalSeconds) switch
             {
-                > 1 => Terraria.ID.ItemID.CopperWatch,
-                > 0.6 => Terraria.ID.ItemID.SilverWatch,
-                > 0.3 => Terraria.ID.ItemID.GoldWatch,
-                _ => Terraria.ID.ItemID.PlatinumWatch,
+                < 0.5 => Terraria.ID.ItemID.PlatinumWatch,
+                < 1 => Terraria.ID.ItemID.GoldWatch,
+                < 1.5 => Terraria.ID.ItemID.SilverWatch,
+                _ => Terraria.ID.ItemID.CopperWatch,
             };
+            Main.instance.LoadItem(watchType);
             var watchSprite = Terraria.GameContent.TextureAssets.Item[watchType];
             drawPos = panelPos;
             spriteBatch.Draw(watchSprite.Value, new Rectangle((int)drawPos.X, (int)drawPos.Y, (int)panelSize.Y, (int)panelSize.Y), null, Color.White, 0f, Vector2.Zero, SpriteEffects.None, 0f);
@@ -128,7 +140,7 @@ namespace TerrariaCells.Content.UI
 
             UIHelper.PANEL.Draw(spriteBatch, bounds, UIHelper.InventoryColour);
 
-            byte killCount = Main.LocalPlayer.GetModPlayer<Common.ModPlayers.RewardPlayer>().KillCount;
+            byte killCount = RewardTrackerSystem.killCount;
             //Draw leading zeroes:
             /*
             string drawString = $"{killCount:D3}";
@@ -162,15 +174,15 @@ namespace TerrariaCells.Content.UI
                 );*/
             }
 
-            byte targetKillCount = Main.LocalPlayer.GetModPlayer<Common.ModPlayers.RewardPlayer>().targetKillCount;
+            byte targetKillCount = RewardTrackerSystem.targetKillCount;
             if (targetKillCount == 0)
                 targetKillCount = 1;
             float allKills = (float)killCount / (float)targetKillCount;
             ReLogic.Content.Asset<Texture2D> drawSprite = allKills switch
             {
-                < 0.3f => JourneyBunny,
-                < 0.6f => ClassicBunny,
-                < .9f => ExpertBunny,
+                < 0.25f => JourneyBunny,
+                < 0.5f => ClassicBunny,
+                < .75f => ExpertBunny,
                 _ => MasterBunny
             };
             drawPos = panelPos + new Vector2(Padding);

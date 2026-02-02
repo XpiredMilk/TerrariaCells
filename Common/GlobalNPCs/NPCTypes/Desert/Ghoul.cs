@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Terraria;
 using Terraria.Audio;
+using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -59,7 +60,7 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
 			{
 				ShouldWalk = false;
 				npc.velocity.X *= 0.9f;
-				if (npc.Grounded() && MathF.Abs(npc.velocity.X) < 1)
+				if ((npc.collideY && npc.velocity.Y == 0) && MathF.Abs(npc.velocity.X) < 1)
 				{
 					if (Main.rand.NextBool(10))
 					{
@@ -67,9 +68,12 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
 						npc.spriteDirection = npc.direction = direction;
 						npc.velocity.X = npc.direction * 10f;
 						SoundEngine.PlaySound(SoundID.Item1, npc.Center);
-						Projectile slash = Projectile.NewProjectileDirect(npc.GetSource_FromAI(), npc.Center, Vector2.Zero, ModContent.ProjectileType<Slash>(), TCellsUtils.ScaledHostileDamage(npc.damage), 1, -1, npc.whoAmI, 0, npc.direction);
-						if (npc.direction < 0)
-							slash.rotation = MathHelper.Pi;
+                        if (Main.netMode != NetmodeID.MultiplayerClient)
+                        {
+                            Projectile slash = Projectile.NewProjectileDirect(npc.GetSource_FromAI(), npc.Center, Vector2.Zero, ModContent.ProjectileType<Slash>(), TCellsUtils.ScaledHostileDamage(npc.damage), 1, -1, npc.whoAmI, 0, npc.direction);
+                            if (npc.direction < 0)
+                                slash.rotation = MathHelper.Pi;
+                        }
 					}
 					else
 					{

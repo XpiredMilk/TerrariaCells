@@ -13,15 +13,17 @@ using System.Reflection;
 using Terraria.DataStructures;
 using MonoMod.Cil;
 using Mono.Cecil.Cil;
-
-using TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared;
 using TerrariaCells.Common.GlobalItems;
+using Terraria.ModLoader.IO;
+using System.IO;
 
 namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Crimson
 {
-	public class BrainOfCthulhu : AIType
+	public class BrainOfCthulhu : GlobalNPC, Common.GlobalNPCs.PreFindFrame.IGlobal
 	{
-		public override void Load()
+        public static Vector2? SpawnPos { get; internal set; } = null;
+
+        public override void Load()
 		{
 			Terraria.GameContent.UI.BigProgressBar.IL_BrainOfCthuluBigProgressBar.ValidateAndCollectNecessaryInfo += BoCHealthBarInfo;
 		}
@@ -88,37 +90,47 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Crimson
         //Timer() => ai[0]
         //
 
+        public override bool AppliesToEntity(NPC entity, bool lateInstantiation) => entity.type == NPCID.BrainofCthulhu;
+        //public override bool AppliesToNPC(int npcType)
+        //{
+        //	return npcType == NPCID.BrainofCthulhu;
+        //}
 
-		public override bool AppliesToNPC(int npcType)
-		{
-			return npcType == NPCID.BrainofCthulhu;
-		}
+        public override void OnSpawn(NPC npc, IEntitySource source)
+        {
+            npc.GetGlobalNPC<CombatNPC>().allowContactDamage = false;
+            npc.netUpdate = true;
 
-		//This is probably not ideal NPC behaviour code
-		//Probably don't emulate this
-		public override void Behaviour(NPC npc)
+            if (SpawnPos is null)
+            {
+                npc.EncourageDespawn(-1);
+                npc.timeLeft = 0;
+                SpawnPos = npc.position + (Vector2.UnitX * 80);
+                PowerupPickups.brainOfCthuluSpawnPoint = SpawnPos;
+                npc.Opacity = 0;
+                return;
+            }
+
+            npc.localAI[1] = npc.Center.X;
+            npc.localAI[2] = npc.Center.Y;
+        }
+
+        //This is probably not ideal NPC behaviour code
+        //Probably don't emulate this
+        public override bool PreAI(NPC npc)
 		{
+            if (SpawnPos is null)
+            {
+                npc.EncourageDespawn(-1);
+                npc.netUpdate = true;
+                return false;
+            }
+            if (npc.despawnEncouraged)
+            {
+                return false;
+            }
+
             int timer = (int)npc.ai[0];
-
-			if (timer == 0)
-			{
-                //Basically combining the X/Y position in such a way that it can be extracted later:
-                //X = (int)(npc.ai[1] / (Main.maxTilesY * 16));
-                //Y = (int)(npc.ai[1] % X)
-                //There are a couple edge cases, where the NPC is spawned at the world borders
-
-                //npc.ai[1] = ((uint)npc.Center.X * worldHeight) + (uint)npc.Center.Y;
-                //npc.ai[1] = PositionToFloat(npc.Center);
-                npc.localAI[1] = npc.Center.X;
-                npc.localAI[2] = npc.Center.Y;// + (3.5f * 16);
-                npc.ai[0]++;
-				npc.EncourageDespawn(0);
-				npc.GetGlobalNPC<CombatNPC>().allowContactDamage = false;
-				npc.Opacity = 0;
-
-				PowerupPickups.brainOfCthuluSpawnPoint = npc.position + (Vector2.UnitX * 80);
-				return;
-			}
 
             //Vector2 centre = Vector2.Zero;
             //centre.X = (int)(npc.ai[1] / worldHeight);
@@ -126,9 +138,6 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Crimson
             Vector2 centre = new Vector2(npc.localAI[1], npc.localAI[2]);
 
 			CombatNPC globalNPC = npc.GetGlobalNPC<CombatNPC>();
-
-			Systems.CameraManipulation.SetZoom(45, new Vector2(95, 55) * 16, null);
-			Systems.CameraManipulation.SetCamera(45, centre - Main.ScreenSize.ToVector2() * 0.5f);
 
 			void Entrance()
 			{
@@ -171,7 +180,6 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Crimson
 
 					npc.Opacity = 1;
 				}
-
 			}
 			void WarnCharge()
 			{
@@ -780,14 +788,14 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Crimson
 				if (timer == Start)
 				{
 					Point spawnPos = centre.ToTileCoordinates();
-					for (int j = 0; j < 16; j++)
+					for (int j = 0; j < 16 && WorldGen.InWorld(spawnPos.X, spawnPos.Y); j++)
 					{
 						if (WorldGen.SolidTile2(spawnPos.X, spawnPos.Y))
 							break;
 						spawnPos.Y++;
 					}
 					spawnPos.Y++;
-					for (int j = 0; j < 16; j++)
+					for (int j = 0; j < 16 && WorldGen.InWorld(spawnPos.X, spawnPos.Y); j++)
 					{
 						if (WorldGen.SolidTile2(spawnPos.X, spawnPos.Y))
 							break;
@@ -905,27 +913,29 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Crimson
 			Fall();
 
             npc.ai[0]++;
-			//npc.DoTimer();
+            //npc.DoTimer();
+
+            return false;
 		}
 
-		readonly int[] RightTentacles = new int[] {
+		private static readonly int[] RightTentacles = new int[] {
 			233, 285, 336, 387, 439, 490, 542, 593, 612, 645, 695, 747, 798, 851, 900, 1056,
 			1107, 1159, 1210, 1261, 1313, 1365, 1467, 1518, 1570, 1621, 1673, 1724, 1776,
 			1826, 1877, 1930, 1981, 2032, 2083, 2135, 2186, 2237, 2289, 2342, 2392, 2444,
 			2495, 2546, 2598, 2623, 2630, 2650, 2662, 2668
 		};
 
-		readonly int[] LeftTentacles = new int[] {
+		private static readonly int[] LeftTentacles = new int[] {
 			260, 310, 362, 413, 465, 516, 567, 614, 671, 721, 772, 824, 874, 1082, 1133, 1184,
 			1236, 1287, 1338, 1493, 1544, 1595, 1647, 1698, 1749, 1801, 1853, 1904, 1955, 2006,
 			2057, 2109, 2161, 2213, 2265, 2315, 2366, 2419, 2470, 2521, 2572
 		};
 
-		readonly int[] PlatformHeights = new int[] {
+		private static readonly int[] PlatformHeights = new int[] {
 			26, 31, 37, 43
 		};
 
-		public override bool FindFrame(NPC npc, int frameHeight)
+		public bool PreFindFrame(NPC npc, int frameHeight)
 		{
 			npc.frameCounter++;
 			if (npc.dontTakeDamage)
@@ -950,7 +960,40 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Crimson
 			}
 			return false;
 		}
-	}
+
+        public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)
+        {
+            bitWriter.WriteBit(SpawnPos.HasValue);
+            if (SpawnPos != null)
+            {
+                binaryWriter.Write(SpawnPos.Value.X);
+                binaryWriter.Write(SpawnPos.Value.Y);
+            }
+        }
+        public override void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader)
+        {
+            if (bitReader.ReadBit())
+            {
+                SpawnPos = new Vector2(binaryReader.ReadSingle(), binaryReader.ReadSingle());
+            }
+        }
+    }
+
+    internal class BrainCamera : ModPlayer
+    {
+        private bool nearBoC = false;
+        public override void PreUpdate()
+        {
+            if(Main.netMode == 2) return;
+            nearBoC = false;
+            foreach(NPC npc in Main.ActiveNPCs) if(npc.type == NPCID.BrainofCthulhu) { nearBoC = true; break; }
+            if (nearBoC && BrainOfCthulhu.SpawnPos.HasValue)
+            {
+                Systems.CameraManipulation.SetZoom(45, new Vector2(95, 55) * 16, null);
+                Systems.CameraManipulation.SetCamera(45, (BrainOfCthulhu.SpawnPos.Value - (ContentSamples.NpcsByNetId[NPCID.BrainofCthulhu].Size*0.5f)) - Main.ScreenSize.ToVector2() * 0.5f);
+            }
+        }
+    }
 
 	/// <summary>
 	/// <para><c><see cref="Projectile.ai"/>[0]</c> --> Target position X</para>

@@ -2,6 +2,7 @@
 using ReLogic.Graphics;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Principal;
 using System.Text;
@@ -10,6 +11,10 @@ using Terraria;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
+
+using TerrariaCells.Common.ModPlayers;
+using TerrariaCells.Common.Utilities;
+using TerrariaCells.Content.Packets;
 
 namespace TerrariaCells.Common.GlobalNPCs
 {
@@ -40,33 +45,65 @@ namespace TerrariaCells.Common.GlobalNPCs
 			BuffID.CursedInferno,
 			BuffID.Poisoned,
 			BuffID.Venom,
-			BuffID.Bleeding
+			BuffID.Bleeding,
+            BuffID.OnFire3,
 		};
 		public readonly int[] buffStacks = new int[NPC.maxBuffs];
 		public readonly int[] buffOrigTimes = new int[NPC.maxBuffs];
 		public bool bleeding = false;
 
-		private void On_NPC_AddBuff(On_NPC.orig_AddBuff orig, NPC self, int type, int time, bool quiet)
+		private static void On_NPC_AddBuff(On_NPC.orig_AddBuff orig, NPC self, int type, int time, bool quiet)
 		{
+            int stacksToAdd = 1;
+
+            //Interactions aren't tracked on MP client. So you would hit an enemy, it wouldn't see you as having interacted with it, and then it wouldn't replace the buff
+            //Stupid ass game
+            if (self.AnyInteractions())
+            {
+                //int oldType = type;
+                type = Main.player[self.lastInteraction].GetModPlayer<BuffPlayer>().GetBuffToApply(type, ref time, ref stacksToAdd);
+                //ModContent.GetInstance<TerrariaCells>().Logger.Info($"(BUFF) Replaced {oldType} with {type}");
+            }
+            else if(Main.netMode != 2)
+            {
+                //int oldType = type;
+                type = Main.LocalPlayer.GetModPlayer<BuffPlayer>().GetBuffToApply(type, ref time, ref stacksToAdd);
+                //ModContent.GetInstance<TerrariaCells>().Logger.Info($"(BUFF) Replaced {oldType} with {type}");
+            }
 			orig.Invoke(self, type, time, quiet);
 
 			int buffIndex = self.FindBuffIndex(type);
-			if (buffIndex != -1 && buffIndex < NPC.maxBuffs)
+            if (buffIndex != -1 && buffIndex < NPC.maxBuffs)
 			{
-				BuffNPC buffNPC = self.GetGlobalNPC<BuffNPC>();
-				if (buffNPC.buffOrigTimes[buffIndex] < time)
+                if (!self.TryGetGlobalNPC<BuffNPC>(out BuffNPC buffNPC))
+                    return;
+                if (buffNPC.buffOrigTimes[buffIndex] < time)
 					buffNPC.buffOrigTimes[buffIndex] = time;
 				if (buffNPC.buffStacks[buffIndex] < 1)
-					buffNPC.buffStacks[buffIndex] = 1;
+					buffNPC.buffStacks[buffIndex] = stacksToAdd;
 				else
-					buffNPC.buffStacks[buffIndex]++;
-			}
+					buffNPC.buffStacks[buffIndex] += stacksToAdd;
+
+                if(!quiet)
+                {
+                    //ModContent.GetInstance<TerrariaCells>().Logger.Info($"(BUFF) Applied {type} to {self.TypeName} for {time} ({buffNPC.buffOrigTimes[buffIndex]}) with {stacksToAdd}");
+                    if (Main.netMode == NetmodeID.MultiplayerClient)
+                    {
+                        buffNPC.NetSend_NewBuff(self, buffIndex);
+                    }
+                    else if(Main.netMode == NetmodeID.Server)
+                    {
+                        buffNPC.NetSend_BuffVars(self);
+                    }
+                }
+            }
 		}
 		///Brought over from <see cref="Systems.VanillaClearingSystem"/>...
 		//Adjusted to allow different behaviour with a stack counter
 		private void On_NPC_UpdateNPC_BuffSetFlags(On_NPC.orig_UpdateNPC_BuffSetFlags orig, NPC self, bool lowerBuffTime)
 		{
-			BuffNPC buffNPC = self.GetGlobalNPC<BuffNPC>();
+            if (!self.TryGetGlobalNPC<BuffNPC>(out BuffNPC buffNPC))
+                return;
 
 			for (int i = 0; i < NPC.maxBuffs; i++)
 			{
@@ -95,9 +132,11 @@ namespace TerrariaCells.Common.GlobalNPCs
 		}
 		private void On_NPC_DelBuff(On_NPC.orig_DelBuff orig, NPC self, int buffIndex)
 		{
-			if (BuffsToClear.Contains(self.buffType[buffIndex]))
+            if (!self.TryGetGlobalNPC<BuffNPC>(out BuffNPC buffNPC))
+                return;
+
+            if (BuffsToClear.Contains(self.buffType[buffIndex]))
 			{
-				BuffNPC buffNPC = self.GetGlobalNPC<BuffNPC>();
 				//Check time bc NPC could gain sudden immunity (eg, to On Fire, while in Water)
 				if (buffNPC.buffStacks[buffIndex] > 1 && self.buffTime[buffIndex] < 1)
 				{
@@ -119,13 +158,20 @@ namespace TerrariaCells.Common.GlobalNPCs
 			{
 				orig.Invoke(self, buffIndex);
 			}
-		}
+
+            if (Main.netMode == NetmodeID.Server)
+            {
+                buffNPC.NetSend_BuffVars(self);
+            }
+        }
 
 		//Buff stacks were being reduced to 0 by Blood Crawlers' `NPC.Transform(..)` call
-		private void On_NPC_Transform(On_NPC.orig_Transform orig, NPC self, int newType)
+		private static void On_NPC_Transform(On_NPC.orig_Transform orig, NPC self, int newType)
 		{
-			BuffNPC buffNPC = self.GetGlobalNPC<BuffNPC>();
-			int[] oldBuffStacks = buffNPC.buffStacks;
+            if (!self.TryGetGlobalNPC<BuffNPC>(out BuffNPC buffNPC))
+                return;
+
+            int[] oldBuffStacks = buffNPC.buffStacks;
 			int[] oldBuffTimes = buffNPC.buffOrigTimes;
 			orig.Invoke(self, newType);
 			buffNPC = self.GetGlobalNPC<BuffNPC>();
@@ -134,7 +180,12 @@ namespace TerrariaCells.Common.GlobalNPCs
 				buffNPC.buffStacks[i] = oldBuffStacks[i];
 				buffNPC.buffOrigTimes[i] = oldBuffTimes[i];
 			}
-		}
+
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                buffNPC.NetSend_BuffVars(self);
+            }
+        }
 
 		//Handles debuff VFX
 		///Didn't use <see cref="GlobalNPC.DrawEffects(NPC, ref Color)"/> because I wanted to now *disable* vanilla VFX
@@ -145,12 +196,14 @@ namespace TerrariaCells.Common.GlobalNPCs
 			if ((indicator & Configs.TerrariaCellsConfig.DebuffIndicators.Particles) == Configs.TerrariaCellsConfig.DebuffIndicators.None)
 				return;
 
-			//Vanilla code
-			npc.position += npc.netOffset;
-			//
+            if (!npc.TryGetGlobalNPC<BuffNPC>(out BuffNPC globalNPC))
+                return;
 
-			BuffNPC globalNPC = npc.GetGlobalNPC<BuffNPC>();
-			for (int buffIndex = 0; buffIndex < NPC.maxBuffs; buffIndex++)
+            //Vanilla code
+            npc.position += npc.netOffset;
+            //
+
+            for (int buffIndex = 0; buffIndex < NPC.maxBuffs; buffIndex++)
 			{
 				int buffType = npc.buffType[buffIndex];
 				int buffTime = npc.buffTime[buffIndex];
@@ -186,6 +239,17 @@ namespace TerrariaCells.Common.GlobalNPCs
 							dust.velocity = npc.velocity * 0.3f + Vector2.One.RotatedByRandom(MathHelper.TwoPi);
 						}
 						break;
+                    case BuffID.OnFire3:
+                        int maxStrength_OF3 = Math.Min(buffStacks, 6);
+                        if (Main.rand.NextBool(10 - maxStrength_OF3))
+                        {
+                            dust = Dust.NewDustDirect(npc.position, npc.width, npc.height, DustID.InfernoFork, Alpha: 100);
+                            dust.rotation = Main.rand.NextFloat(MathHelper.TwoPi);
+                            dust.scale = (MathF.Sin(dust.rotation) * 0.25f) + (2 + maxStrength_OF3 * 0.1f);
+                            dust.noGravity = true;
+                            dust.velocity = npc.velocity * 0.3f + Vector2.One.RotatedBy(MathHelper.TwoPi);
+                        }
+                        break;
 
 					case BuffID.Poisoned:
 						int maxStrength_P = Math.Min(buffStacks, 8);
@@ -243,6 +307,8 @@ namespace TerrariaCells.Common.GlobalNPCs
 			npc.onFire = false;
 			bool was_onFire2 = npc.onFire2;
 			npc.onFire2 = false;
+            bool was_onFire3 = npc.onFire3;
+            npc.onFire3 = false;
 			bool was_poisoned = npc.poisoned;
 			npc.poisoned = false;
 			bool was_venom = npc.venom;
@@ -252,6 +318,7 @@ namespace TerrariaCells.Common.GlobalNPCs
 
 			npc.onFire = was_onFire;
 			npc.onFire2 = was_onFire2;
+            npc.onFire3 = was_onFire3;
 			npc.poisoned = was_poisoned;
 			npc.venom = was_venom;
 		}
@@ -294,14 +361,13 @@ namespace TerrariaCells.Common.GlobalNPCs
 				{
 					//Linear-Scaling DPS
 					case BuffID.OnFire:
-						if (!npc.HasBuff(BuffID.Oiled))
+                        npc.onFire = true;
+                        if (!npc.HasBuff(BuffID.Oiled))
 						{
-							npc.onFire = true;
 							npc.lifeRegen -= Adjust(LinearScale(buffStacks, 1, 3));
 						}
 						else //Double efficacy with Oiled debuff
 						{
-							npc.onFire3 = true;
 							npc.lifeRegen -= 2 * Adjust(LinearScale(buffStacks, 1, 3));
 							damage++;
 						}
@@ -311,6 +377,11 @@ namespace TerrariaCells.Common.GlobalNPCs
 						npc.lifeRegen -= Adjust(LinearScale(buffStacks, 3, 5));
 						damage += 4;
 						break;
+                    case BuffID.OnFire3:
+                        npc.onFire3 = true;
+                        npc.lifeRegen -= Adjust(LinearScale(buffStacks, 2, 3));
+                        damage += 2;
+                        break;
 
 					//Front-Loaded DPS
 					case BuffID.Poisoned:
@@ -319,7 +390,7 @@ namespace TerrariaCells.Common.GlobalNPCs
 						break;
 					case BuffID.Venom:
 						npc.venom = true;
-						npc.lifeRegen -= Adjust(GeometricScale(buffStacks * 0.167f, 5f, 0.8125f));
+						npc.lifeRegen -= Adjust(GeometricScale(buffStacks * 0.167f, 5.5f, 0.8125f));
 						if (damage > 4)
 							damage = damage * 3 / 4; //Tick slightly more frequently
 						break;
@@ -329,6 +400,8 @@ namespace TerrariaCells.Common.GlobalNPCs
 						npc.lifeRegen -= Adjust(ExponentialScale(buffStacks, 0.025f));
 						if (damage > 2)
 							damage /= 2; //Tick more frequently
+                        if (damage < (buffStacks / 2))
+                            damage = buffStacks / 2;
 						break;
 
 					default:
@@ -347,13 +420,12 @@ namespace TerrariaCells.Common.GlobalNPCs
 		//Handles debuff icons for enemies
 		public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
 		{
+            //Hide buffs when NPC can't display them (as with colour tinting)
+            if (!npc.canDisplayBuffs)
+                return;
 			//Don't do this draw step if you have debuff icons disabled
 			Configs.TerrariaCellsConfig.DebuffIndicators indicator = Configs.TerrariaCellsConfig.Instance.IndicatorType;
 			if ((indicator & Configs.TerrariaCellsConfig.DebuffIndicators.Icon) == Configs.TerrariaCellsConfig.DebuffIndicators.None)
-				return;
-
-			//Have to deal damage to see debuffs
-			if (!npc.playerInteraction[Main.myPlayer])
 				return;
 
 			List<(int BuffType, int BuffStacks)> BuffInfo = new List<(int BuffType, int BuffStacks)>();
@@ -397,9 +469,17 @@ namespace TerrariaCells.Common.GlobalNPCs
 		//Helper method for applying debuffs consistently
 		public static void AddBuff(NPC npc, int buffType, int time, int damage, int addStacks = 0)
 		{
-			BuffNPC buffNPC = npc.GetGlobalNPC<BuffNPC>();
-			int stacksToAdd = (damage/9) + addStacks;
+            if (!npc.TryGetGlobalNPC<BuffNPC>(out BuffNPC buffNPC))
+                return;
+
+            int stacksToAdd = (damage/9) + addStacks;
 			stacksToAdd = Math.Max(stacksToAdd, 1);
+
+            if (npc.AnyInteractions())
+            {
+                buffType = Main.player[npc.lastInteraction].GetModPlayer<BuffPlayer>().GetBuffToApply(buffType, ref time, ref stacksToAdd);
+            }
+
 			int buffIndex = npc.FindBuffIndex(buffType);
 			if (buffIndex != -1 && buffIndex < NPC.maxBuffs)
 			{
@@ -407,7 +487,12 @@ namespace TerrariaCells.Common.GlobalNPCs
 					buffNPC.buffOrigTimes[buffIndex] = time;
 				npc.buffTime[buffIndex] = buffNPC.buffOrigTimes[buffIndex];
 				buffNPC.buffStacks[buffIndex] += stacksToAdd;
-			}
+
+                if (Main.netMode == NetmodeID.MultiplayerClient)
+                {
+                    buffNPC.NetSend_NewBuff(npc, buffIndex);
+                }
+            }
 			else
 			{
 				npc.AddBuff(buffType, time, false);
@@ -417,7 +502,62 @@ namespace TerrariaCells.Common.GlobalNPCs
 					buffNPC.buffStacks[buffIndex] += stacksToAdd - 1;
 					buffNPC.buffOrigTimes[buffIndex] = time;
 				}
-			}
+
+                if (Main.netMode == NetmodeID.MultiplayerClient)
+                {
+                    buffNPC.NetSend_BuffVars(npc);
+                }
+            }
 		}
+
+        private void NetSend_NewBuff(NPC npc, int buffIndex, int toClient = -1, int ignoreClient = -1)
+        {
+            ModPacket packet = ModNetHandler.GetPacket(ModContent.GetInstance<TerrariaCells>(), TCPacketType.BuffPacket);
+            packet.Write((byte)BuffPacketHandler.BuffPacketType.AddBuff);
+            packet.Write((byte)npc.whoAmI);
+            packet.Write((byte)buffIndex);
+            packet.Write7BitEncodedInt(this.buffOrigTimes[buffIndex]);
+            packet.Write7BitEncodedInt(this.buffStacks[buffIndex]);
+            packet.Send(toClient, ignoreClient);
+        }
+        private void NetSend_BuffVars(NPC npc, int toClient = -1, int ignoreClient = -1)
+        {
+            ModPacket packet = ModNetHandler.GetPacket(ModContent.GetInstance<TerrariaCells>(), TCPacketType.BuffPacket);
+            packet.Write((byte)BuffPacketHandler.BuffPacketType.Buffs);
+            packet.Write((byte)npc.whoAmI);
+            for (int i = 0; i < NPC.maxBuffs; i++)
+            {
+                packet.Write7BitEncodedInt(this.buffOrigTimes[i]);
+                packet.Write7BitEncodedInt(this.buffStacks[i]);
+            }
+            packet.Send(toClient, ignoreClient);
+        }
+
+        public void NetReceieve(NPC npc, BuffPacketHandler.BuffPacketType packetType, BinaryReader reader, int fromWho)
+        {
+            switch (packetType)
+            {
+                case BuffPacketHandler.BuffPacketType.AddBuff:
+                    byte buffIndex = reader.ReadByte();
+                    int origTime = reader.Read7BitEncodedInt();
+                    int buffStacks = reader.Read7BitEncodedInt();
+                    this.buffOrigTimes[buffIndex] = origTime;
+                    this.buffStacks[buffIndex] = buffStacks;
+
+                    if (Main.netMode == NetmodeID.Server)
+                    {
+                        NetSend_NewBuff(npc, buffIndex, -1, fromWho);
+                    }
+                    break;
+
+                case BuffPacketHandler.BuffPacketType.Buffs:
+                    for (int i = 0; i < NPC.maxBuffs; i++)
+                    {
+                        this.buffOrigTimes[i] = reader.Read7BitEncodedInt();
+                        this.buffStacks[i] = reader.Read7BitEncodedInt();
+                    }
+                    break;
+            }
+        }
 	}
 }

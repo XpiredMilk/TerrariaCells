@@ -33,6 +33,7 @@ namespace TerrariaCells.Common.GlobalProjectiles
         private static float stakeToUndeadDamageModifier = 1.5f;
         public bool ForceCrit = false;
         public override bool InstancePerEntity => true;
+
         public override void SetDefaults(Projectile projectile)
 		{
 			switch (projectile.type)
@@ -49,7 +50,23 @@ namespace TerrariaCells.Common.GlobalProjectiles
 					projectile.penetrate = 1;
 					projectile.extraUpdates = 14;
 					break;
-			}
+                case ProjectileID.BabySpider:
+                    projectile.usesIDStaticNPCImmunity = true;
+                    projectile.idStaticNPCHitCooldown = 8;
+                    break;
+                case ProjectileID.ToxicCloud:
+                case ProjectileID.ToxicCloud2:
+                case ProjectileID.ToxicCloud3:
+                    projectile.usesIDStaticNPCImmunity = true;
+                    projectile.idStaticNPCHitCooldown = 8;
+                    break;
+                case ProjectileID.MolotovFire:
+                case ProjectileID.MolotovFire2:
+                case ProjectileID.MolotovFire3:
+                    projectile.usesIDStaticNPCImmunity = true;
+                    projectile.idStaticNPCHitCooldown = 10;
+                    break;
+            }
 		}
 
         //This had to be either detour-no-orig or IL
@@ -181,6 +198,11 @@ namespace TerrariaCells.Common.GlobalProjectiles
 
         public override void ModifyHitNPC(Projectile projectile, NPC target, ref NPC.HitModifiers modifiers)
         {
+            if (!projectile.DamageType.CountsAsClass(DamageClass.Melee))
+            {
+                modifiers.Knockback *= 0;
+            }
+
             switch (projectile.type)
             {
                 case ProjectileID.Stake:
@@ -194,15 +216,19 @@ namespace TerrariaCells.Common.GlobalProjectiles
                     modifiers.SetCrit();
                     break;
                 case ProjectileID.GladiusStab:
-                    if  (target.HasBuff(BuffID.Poisoned) || target.HasBuff(BuffID.BloodButcherer))
+                    if (target.HasBuff(BuffID.Poisoned) || target.HasBuff(BuffID.Bleeding))
+                    {
                         modifiers.SetCrit();
+                        modifiers.CritDamage += 0.25f;
+                    }
                     break;
             }
 
 			if (projectile.TryGetGlobalProjectile(out SourceGlobalProjectile gProj) && gProj.itemSource != null)
 			{
 				Item source = gProj.itemSource;
-				if (source.type == ItemID.SniperRifle && target.boss)
+                bool honouraryBoss = target.type >= NPCID.EaterofWorldsHead && target.type <= NPCID.EaterofWorldsTail;
+				if (source.type == ItemID.SniperRifle && (target.boss || honouraryBoss))
 					ForceCrit = true;
 				else if (source.type == ItemID.PhoenixBlaster && Content.WeaponAnimations.Gun.TryGetGlobalItem(source, out Content.WeaponAnimations.Gun gun))
 				{
@@ -269,6 +295,9 @@ namespace TerrariaCells.Common.GlobalProjectiles
 
         public override void OnSpawn(Projectile projectile, IEntitySource source)
         {
+            if (!projectile.DamageType.CountsAsClass(DamageClass.Melee))
+                projectile.knockBack = 0f;
+
             if (projectile.type == ProjectileID.Volcano && projectile.ai[1] != 1)
             {
                 projectile.Kill();

@@ -8,35 +8,32 @@ using static TerrariaCells.Common.Utilities.NPCHelpers;
 using Microsoft.Xna.Framework.Graphics;
 
 using TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared;
+using Terraria.ModLoader;
 
 namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Crimson
 {
-	public class Crimera : AIType
+	public class Crimera : Terraria.ModLoader.GlobalNPC, OnAnyPlayerHit.IGlobal
 	{
-		public override bool AppliesToNPC(int npcType)
-		{
-			return npcType is NPCID.Crimera or NPCID.BigCrimera or NPCID.LittleCrimera;
-		}
+        public override bool AppliesToEntity(NPC entity, bool lateInstantiation) => entity.type is NPCID.Crimera or NPCID.BigCrimera or NPCID.LittleCrimera or NPCID.EaterofSouls or NPCID.LittleEater or NPCID.BigEater;
 
 		const int Idle = 0;
 		const int Orbit = 1;
 		const int Charge = 2;
 		const int Stun = 3;
 
-		public override void Behaviour(NPC npc)
+		public override bool PreAI(NPC npc)
 		{
-			if (!npc.HasValidTarget)
-				npc.TargetClosest(false);
 			if (!npc.HasValidTarget)
 			{
 				IdleAI(npc);
-				return;
+				return false;
 			}
             if (npc.direction == 0)
             {
                 npc.direction = 1;
             }
 
+            float oldAI = npc.ai[1];
 			switch ((int)npc.ai[1])
 			{
 				case Idle:
@@ -52,12 +49,18 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Crimson
 					StunAI(npc);
 					break;
 			}
+            if (npc.ai[1] != oldAI)
+                npc.netUpdate = true;
+
             npc.spriteDirection = npc.direction;
+
+            return false;
 		}
 
 		private void IdleAI(NPC npc)
 		{
-			CombatNPC.ToggleContactDamage(npc, false);
+            npc.TargetClosest(false);
+            CombatNPC.ToggleContactDamage(npc, false);
 			if (npc.TargetInAggroRange(420))
 			{
 				npc.ai[2] = Main.rand.Next(new int[] { -1, 1 });
@@ -111,8 +114,9 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Crimson
 			{
 				npc.ai[1] = Charge;
 				npc.ai[0] = 0;
-				//npc.noTileCollide = false;
-				return;
+                npc.netUpdate = true;
+                //npc.noTileCollide = false;
+                return;
 			}
 
 			npc.ai[0]++;
@@ -159,7 +163,8 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Crimson
 					npc.ai[1] = Stun;
 					npc.ai[0] = 0;
 					npc.ai[2] = 0;
-					return;
+                    npc.netUpdate = true;
+                    return;
 				}
 			}
 
@@ -175,11 +180,12 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Crimson
 			{
 				CombatNPC.ToggleContactDamage(npc, false);
 			}
-			if (timer > 45)
+			if (timer > 35)
 			{
 				npc.ai[1] = Idle;
 				npc.ai[0] = 0;
-				return;
+                npc.netUpdate = true;
+                return;
 			}
 
 			npc.ai[0]++;
@@ -193,5 +199,18 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Crimson
 			}
 			return base.PreDraw(npc, spritebatch, screenPos, lightColor);
 		}
+
+        public void OnAnyPlayerHit(NPC npc, Player attacker, NPC.HitInfo info, int damage)
+        {
+            if (info.DamageType.CountsAsClass(DamageClass.Melee))
+            {
+                switch ((int)npc.ai[1])
+                {
+                    case Stun:
+                        npc.ai[0] = 0;
+                        break;
+                }
+            }
+        }
     }
 }

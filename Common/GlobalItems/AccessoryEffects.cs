@@ -6,6 +6,7 @@ using Terraria.ID;
 using Terraria.DataStructures;
 using Terraria.Localization;
 using System.Collections.Generic;
+using TerrariaCells.Common.ModPlayers;
 
 namespace TerrariaCells.Common.GlobalItems
 {
@@ -51,8 +52,16 @@ namespace TerrariaCells.Common.GlobalItems
 					item.defense = 0;
 					break;
 				case ItemID.ObsidianShield:
-					item.defense = 6;
+					item.defense = 0;
 					break;
+                case ItemID.FlaskofVenom:
+                    item.consumable = false;
+                    item.maxStack = 1;
+                    item.accessory = true;
+                    item.useStyle = 0;
+                    item.buffType = 0;
+                    item.buffTime = 0;
+                    break;
 			}
 			if (item.type == ItemID.ChlorophyteDye)
 			{
@@ -87,6 +96,7 @@ namespace TerrariaCells.Common.GlobalItems
 					break;
 				case ItemID.ObsidianShield:
 					player.noKnockback = true;
+                    player.endurance += 0.2f;
 					break;
 				case ItemID.ThePlan:
 					modPlayer.thePlan = true;
@@ -102,7 +112,8 @@ namespace TerrariaCells.Common.GlobalItems
 					modPlayer.nazar = true;
 					break;
 				case ItemID.BerserkerGlove:
-					modPlayer.bersGlove = true;
+                    if (player.GetModPlayer<Regenerator>().DamageLeft > 0)
+                        player.GetDamage(DamageClass.Melee) += 0.3f;
 					break;
 
 				case ItemID.ReconScope:
@@ -134,6 +145,15 @@ namespace TerrariaCells.Common.GlobalItems
 				case ItemID.MagicCuffs:
 					modPlayer.magicCuffs = true;
 					break;
+                case ItemID.FlaskofVenom:
+                    player.GetModPlayer<BuffPlayer>().ReplaceBuffWith[BuffID.Poisoned] = BuffID.Venom;
+                    break;
+                case ItemID.HerculesBeetle:
+                    modPlayer.heracles = true;
+                    break;
+                case ItemID.PhilosophersStone:
+                    modPlayer.philoStone = true;
+                    break;
 				default:
 					orig.Invoke(player, item, hideVisual);
 					break;
@@ -245,7 +265,7 @@ namespace TerrariaCells.Common.GlobalItems
                 ],
                 ItemID.FastClock =>
                 [
-                    new(Mod, "Tooltip0", "Killing an enemy increases your speed briefly"),
+                    new(Mod, "Tooltip0", "Killing an enemy briefly increases your speed"),
                 ],
                 ItemID.ChlorophyteDye =>
                 [
@@ -254,7 +274,7 @@ namespace TerrariaCells.Common.GlobalItems
                 ItemID.NaturesGift => [new(Mod, "Tooltip0", "25% reduced mana cost")],
                 ItemID.BerserkerGlove =>
                 [
-                    new(Mod, "Tooltip0", "4% increased damage on successive melee attacks"),
+                    new(Mod, "Tooltip0", "Taking damage briefly increases melee damage by 30%"),
                 ],
                 ItemID.FeralClaws => [new(Mod, "Tooltip0", "40% increased melee attack speed")],
                 ItemID.ThePlan =>
@@ -273,8 +293,12 @@ namespace TerrariaCells.Common.GlobalItems
                 ItemID.MagicCuffs => [new(Mod, "Tooltip0", "Gain mana when taking damage")],
                 ItemID.ObsidianShield =>
                 [
-                    new(Mod, "Tooltip0", "Immunity to knockback and fiery hot tiles"),
+                    new(Mod, "Tooltip0", "Immunity to knockback"),
+                    new(Mod, "Tooltip1", "+20% damage reduction"),
                 ],
+                ItemID.FlaskofVenom => [ new(Mod, "Tooltip0", "Poison replaced with Venom")],
+                ItemID.HerculesBeetle => [new(Mod, "Tooltip0", "50% increased damage to Abilities")],
+                ItemID.PhilosophersStone => [new(Mod, "Tooltip0", "Health Potions restore 2x as much health")],
                 _ => [],
             };
         }

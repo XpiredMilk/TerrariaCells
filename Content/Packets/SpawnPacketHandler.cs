@@ -11,14 +11,14 @@ using TerrariaCells.Common.Utilities;
 
 namespace TerrariaCells.Content.Packets
 {
-    internal class SpawnPacketHandler(TCPacketType handlerType) : PacketHandler(handlerType)
+    internal class SpawnPacketHandler() : PacketHandler(TCPacketType.SpawnPacket)
 	{
-        public override void HandlePacket(BinaryReader reader, int fromWho)
+        public override void HandlePacket(Mod mod, BinaryReader reader, int fromWho)
 		{
-			switch (reader.ReadByte())
+			switch ((SpawnPacketType)reader.ReadByte())
 			{
 				// If someone requests to spawn all dead, this can only happen if everyone is dead
-				case (byte)SpawnPacketType.SpawnDead:
+				case SpawnPacketType.SpawnDead:
 				{
 					// Spawn all players on the server, and then sync it to clients, this also checks if all players are dead
                     if (Main.netMode == NetmodeID.MultiplayerClient) return;
@@ -44,7 +44,7 @@ namespace TerrariaCells.Content.Packets
                     break;
 				}
 				// This force respawns all players, including living ones
-				case (byte)SpawnPacketType.SpawnAll:
+				case SpawnPacketType.SpawnAll:
 				{
 					foreach (Player player in Main.player)
 					{
@@ -56,7 +56,7 @@ namespace TerrariaCells.Content.Packets
 					break;
 				}
 				// In case you want to spawn a specific player
-				case (byte)SpawnPacketType.SpawnTarget:
+				case SpawnPacketType.SpawnTarget:
 				{
 					NetMessage.SendData(MessageID.PlayerSpawn, -1, -1, null, reader.ReadByte());
 					break;
@@ -66,8 +66,32 @@ namespace TerrariaCells.Content.Packets
 	}
 	public enum SpawnPacketType : byte
 	{
+        /// <summary>
+        /// Sent by client, respawns all players if all players are dead
+        /// </summary>
+        /// <remarks>
+        /// <b>Send/Receive:</b>
+        /// <para><i>To Client:</i> <c>No Params</c></para>
+        /// <para><i>To Server:</i> <c>No Params</c></para>
+        /// </remarks>
 		SpawnDead,
+        /// <summary>
+        /// Sent by client, attempts to respawn all players (including living ones..?)
+        /// </summary>
+        /// <remarks>
+        /// <b>Send/Receive:</b>
+        /// <para><i>To Client:</i> <c>No Params</c></para>
+        /// <para><i>To Server:</i> <c>No Params</c></para>
+        /// </remarks>
 		SpawnAll,
+        /// <summary>
+        /// Sent by client to respawn a specific player
+        /// </summary>
+        /// <remarks>
+        /// <b>Send/Receive:</b>
+        /// <para><i>To Client:</i> <c>No Params</c></para>
+        /// <para><i>To Server:</i> <c><see langword="byte"/> targetPlayer</c></para>
+        /// </remarks>
 		SpawnTarget,
 	}
 }

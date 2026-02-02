@@ -21,9 +21,6 @@ namespace TerrariaCells.Common.ModPlayers
         public Item? frozenShieldItem;
         public bool thePlan; //+50% damage vs enemies with >90% hp
         public bool nazar; //+20 mana on melee hit
-        public bool bersGlove; //+4% damage for "consecutive" melee hits
-        private int bersTimer;
-        private int bersCounter;
         public bool reconScope; //+30% damage when no enemies nearby
         public bool fuseKitten; //Extra rocket explosion damage/radius
         public bool chlorophyteCoating; //Bullets and arrows become chlorophyte
@@ -31,6 +28,8 @@ namespace TerrariaCells.Common.ModPlayers
         private int stalkerQuiverTimer;
         public bool magicCuffs; // restore 100 mana when taking damage
         public bool celestialStone; //Reduce ability cooldowns by 0.5 sec on critical hit
+        public bool philoStone; //+100% healing potion efficacy
+        public bool heracles; //Abilities deal +50% damage
 
         public override void OnHurt(Player.HurtInfo info)
         {
@@ -216,13 +215,6 @@ namespace TerrariaCells.Common.ModPlayers
         {
             if (!fastClock)
                 fastClockTimer = 0;
-            if (!bersGlove)
-            {
-                bersCounter = 0;
-                bersTimer = 0;
-            }
-            if (bersTimer > 0) bersTimer--;
-            else bersCounter = 0;
             if (Player.immuneTime < 1)
                 frozenShield = false;
             else if (frozenShield)
@@ -245,7 +237,6 @@ namespace TerrariaCells.Common.ModPlayers
             frozenShieldItem = null;
             thePlan = false;
             nazar = false;
-            bersGlove = false;
             reconScope = false;
             fuseKitten = false;
             chlorophyteCoating = false;
@@ -256,6 +247,8 @@ namespace TerrariaCells.Common.ModPlayers
             stalkerQuiver = false;
             celestialStone = false;
             magicCuffs = false;
+            philoStone = false;
+            heracles = false;
         }
         public override void ModifyShootStats(Item item, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)
         {
@@ -336,16 +329,16 @@ namespace TerrariaCells.Common.ModPlayers
             {
                 if (target.life > (int)(target.lifeMax * 0.9f)) modifiers.SourceDamage += 0.3f;
             }
-            if (bersGlove)
-            {
-                modifiers.FinalDamage += (bersCounter * 0.04f);
-            }
         }
         public override void OnHitNPCWithProj(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
             if (stalkerQuiver)
             {
-                if (proj.arrow && proj.type != ProjectileID.PhantasmArrow && stalkerQuiverTimer == 0)
+                bool projArrow = proj.arrow ||
+                    new int[] { ModContent.ProjectileType<Content.Projectiles.IceArrowFriendly>(),
+                        ProjectileID.PulseBolt
+                    }.Contains(proj.type);
+                if (projArrow && proj.type != ProjectileID.PhantasmArrow && stalkerQuiverTimer == 0)
                 {
                     Vector2 pos = target.Center + (Vector2.UnitX.RotatedByRandom(MathHelper.TwoPi) * 320f);
                     Projectile newProj = Projectile.NewProjectileDirect(proj.GetSource_OnHit(target), pos, pos.DirectionTo(target.Center) * 4f, ProjectileID.PhantasmArrow, damageDone / 2, 0f, proj.owner, target.whoAmI);
@@ -363,13 +356,6 @@ namespace TerrariaCells.Common.ModPlayers
                 {
                     Player.statMana += 20;
                     Player.ManaEffect(20);
-                }
-                if (bersGlove)
-                {
-                    bersCounter++;
-                    if (bersCounter > 50)
-                        bersCounter = 50;
-                    bersTimer = 150; //2.5 sec
                 }
             }
             if (hit.Crit)
@@ -391,6 +377,12 @@ namespace TerrariaCells.Common.ModPlayers
 
             if (fastClock) fastClockTimer = 5 * 60;
             if (bandOfRegen) Player.Heal((int)(Player.statLifeMax2 * 0.01f));
+        }
+
+        public override void GetHealLife(Item item, bool quickHeal, ref int healValue)
+        {
+            if (philoStone)
+                healValue *= 2;
         }
     }
 }

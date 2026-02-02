@@ -7,25 +7,28 @@ using Terraria.ModLoader;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using TerrariaCells.Common.Utilities;
-using TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared;
 
 using static TerrariaCells.Common.Utilities.NPCHelpers;
 using static TerrariaCells.Common.Utilities.NumberHelpers;
 
 namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Crimson
 {
-	public class Crimslime : AIType
+	public class Crimslime : Terraria.ModLoader.GlobalNPC, Common.GlobalNPCs.PreFindFrame.IGlobal, OnAnyPlayerHit.IGlobal
 	{
-		public override bool AppliesToNPC(int npcType)
-		{
-			return npcType is NPCID.LittleCrimslime or NPCID.Crimslime or NPCID.BigCrimslime;
-		}
+        public override bool AppliesToEntity(NPC entity, bool lateInstantiation)
+        {
+            return entity.type is NPCID.LittleCrimslime or NPCID.Crimslime or NPCID.BigCrimslime;
+        }
+        //public override bool AppliesToNPC(int npcType)
+		//{
+		//	return npcType is NPCID.LittleCrimslime or NPCID.Crimslime or NPCID.BigCrimslime;
+		//}
 
 		const int Idle = 0; //Ooze left/right passively
 		const int Lunge = 1; //Lunge horizontally left/right
 		const int Jump = 2;
 
-		public override void Behaviour(NPC npc)
+		public override bool PreAI(NPC npc)
 		{
 			if (!npc.HasValidTarget)
 				npc.TargetClosest(false);
@@ -34,7 +37,8 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Crimson
 				ResetAI(npc);
 			}
 
-			switch ((int)npc.ai[1])
+            float oldAI = npc.ai[1];
+            switch ((int)npc.ai[1])
 			{
 				case Idle:
 					IdleAI(npc);
@@ -46,6 +50,10 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Crimson
 					JumpAI(npc);
 					break;
 			}
+            if (npc.ai[1] != oldAI)
+                npc.netUpdate = true;
+
+            return false;
 		}
 
 		private static void ResetAI(NPC npc)
@@ -55,7 +63,8 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Crimson
 			npc.ai[2] = 0;
 			npc.ai[3] = 0;
 			CombatNPC.ToggleContactDamage(npc, false);
-		}
+            npc.netUpdate = true;
+        }
 		//HorizontalMovement(npc, npc.ai[0], npc.ai[2] * 6f, Start, End);
 		private static void HorizontalMovement(NPC npc, float timer, float velocity, int start, int end)
 		{
@@ -100,7 +109,9 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Crimson
 				return;
 			}
 
-			if (npc.ai[0] == 0)
+            CombatNPC.ToggleContactDamage(npc, false);
+
+            if (npc.ai[0] == 0)
 			{
 				npc.ai[2] = Main.rand.NextDirection();
 				npc.netUpdate = true;
@@ -213,7 +224,7 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Crimson
 			}
 		}
 
-		public override bool FindFrame(NPC npc, int frameHeight)
+		public bool PreFindFrame(NPC npc, int frameHeight)
 		{
             npc.frameCounter++;
 			int limit = 12;
@@ -285,5 +296,19 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Crimson
 
 			return base.PreDraw(npc, spritebatch, screenPos, lightColor);
 		}
-	}
+
+        public void OnAnyPlayerHit(NPC npc, Player attacker, NPC.HitInfo info, int damage)
+        {
+            if (info.DamageType.CountsAsClass(DamageClass.Melee))
+            {
+                switch ((int)npc.ai[1])
+                {
+                    case Lunge:
+                        npc.ai[0] = MathF.Max(npc.ai[0]-8, 0);
+                        npc.velocity.X *= 0.5f;
+                        break;
+                }
+            }
+        }
+    }
 }

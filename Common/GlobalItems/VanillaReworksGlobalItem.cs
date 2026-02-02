@@ -69,7 +69,7 @@ namespace TerrariaCells.Common.GlobalItems
                     item.value = 1000;
                     break;
                 case ItemID.IceBow:
-                    item.damage = 13;
+                    item.damage = 8;
                     item.useTime = 16;
                     //item.shootSpeed -= 2f;
                     item.value = 1000;
@@ -126,6 +126,7 @@ namespace TerrariaCells.Common.GlobalItems
                 case ItemID.Gladius:
                     item.damage = 8;
                     item.value = 1000;
+                    item.knockBack = 2f;
                     break;
                 case ItemID.Katana:
                     item.damage = 8;

@@ -31,9 +31,7 @@ namespace TerrariaCells.Common.GlobalProjectiles
                 && projectileFunker.SetInstance(projectile)
             )
             {
-                foreach (
-                    FunkyModifier funkyModifier in projectileFunker.instance.modifiersOnSourceItem
-                )
+                foreach (FunkyModifier funkyModifier in projectileFunker.instance.modifiersOnSourceItem)
                 {
                     if (funkyModifier.modifierType == FunkyModifierType.DropMoreMana)
                     {
@@ -42,21 +40,21 @@ namespace TerrariaCells.Common.GlobalProjectiles
                 }
             }
 
-            if (target.life > 0) //This lets projectiles cause enemies to drop mana stars when killed too
-            {                    // I have no idea why this is necessary for it though... :(
-                if (!target.CanBeChasedBy() || NPCID.Sets.ProjectileNPC[target.type])
-                    return;
-            }
+            if (NPCID.Sets.ProjectileNPC[target.type])
+                return;
 
-            //Fixed an error here that didn't show up for some reason
             if (projectile.DamageType.CountsAsClass(DamageClass.Magic))
             {
-                if (Main.netMode != NetmodeID.MultiplayerClient && !SpawnedMana)
+                if (!SpawnedMana)
                 {
                     SpawnedMana = true;
                     for (int i = 0; i < starsSpawned; i++)
                     {
-                        Item.NewItem(projectile.GetSource_OnHit(target), target.Hitbox, new Item(ItemID.Star));
+                        int whoAmI = Item.NewItem(projectile.GetSource_OnHit(target), target.getRect(), ItemID.Star, noGrabDelay:true);
+                        if(Main.netMode == 1)
+                        {
+                            NetMessage.SendData(MessageID.SyncItem, -1, -1, null, whoAmI, -1);
+                        }
                     }
                 }
             }

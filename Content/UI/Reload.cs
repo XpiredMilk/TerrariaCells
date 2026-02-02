@@ -32,11 +32,6 @@ namespace TerrariaCells.Content.UI
         internal override string InsertionIndex => "Vanilla: Resource Bars";
         GunAmmoIndicator? ammoDrawer;
 
-        public override void OnInitialize()
-        {
-            base.OnInitialize();
-        }
-
         protected override void OnOpened()
         {
             if (!WeaponAnimations.Gun.TryGetGlobalItem(Main.LocalPlayer.HeldItem, out var gun))
@@ -46,6 +41,7 @@ namespace TerrariaCells.Content.UI
             }
             ammoDrawer = new GunAmmoIndicator(Main.LocalPlayer.HeldItem, gun);
             AddElement(ammoDrawer, Padding, Padding, 8, 8);
+            WindowSize = Vector2.One;
         }
         protected override void OnClosed()
         {
@@ -55,10 +51,9 @@ namespace TerrariaCells.Content.UI
         protected override bool PreUpdate(GameTime time)
         {
             if (!WeaponAnimations.Gun.TryGetGlobalItem(Main.LocalPlayer.HeldItem, out var gun)
-                || !ammoDrawer.GunAmmo.Equals(gun)
-                || Main.playerInventory)
+                || !ammoDrawer.GunAmmo.Equals(gun))
             {
-                Common.Systems.DeadCellsUISystem.ToggleActive<Reload>(false);
+                DeadCellsUISystem.ToggleActive<Reload>(false);
                 return false;
             }
 
@@ -92,7 +87,7 @@ namespace TerrariaCells.Content.UI
 
             Point oldSize = WindowSize.ToPoint() - new Point(2 * Padding, 2 * Padding);
             Recalculate();
-            Point newSize = ammoDrawer.GetDimensions().ToRectangle().Size().ToPoint();
+            Point newSize = new Point((int)ammoDrawer.Width.GetValue(Main.screenWidth), (int)ammoDrawer.Height.GetValue(Main.screenHeight));
             if (newSize != oldSize)
             {
                 WindowPosition -= new Vector2(newSize.X - oldSize.X, newSize.Y - oldSize.Y) * 0.5f;
@@ -105,7 +100,7 @@ namespace TerrariaCells.Content.UI
             return false;
         }
 
-        public override void Recalculate()
+        /*public override void Recalculate()
         {
             Rectangle bounds = Bounds;
             this.Left.Set(bounds.X, 0);
@@ -113,7 +108,7 @@ namespace TerrariaCells.Content.UI
             this.Width.Set(bounds.Width, 0);
             this.Height.Set(bounds.Y, 0);
             base.Recalculate();
-        }
+        }*/
 
         protected override bool PreDrawChildren(SpriteBatch spriteBatch)
         {
@@ -137,8 +132,8 @@ namespace TerrariaCells.Content.UI
                         return false;
                     break;
             }
-            UIHelper.PANEL.Draw(spriteBatch, Bounds, UIHelper.InventoryColour);
-            return false;
+            //UIHelper.PANEL.Draw(spriteBatch, Bounds, UIHelper.InventoryColour);
+            return true;
         }
 
         public class GunAmmoIndicator : UIElement
@@ -169,7 +164,7 @@ namespace TerrariaCells.Content.UI
                 int rowCount = (int)MathF.Ceiling((float)MaxAmmo / (float)maxAmmo);
                 Point size = new Point();
                 size.X = maxAmmo * Terraria.GameContent.TextureAssets.Item[ItemID.HighVelocityBullet].Width();
-                if (MaxAmmo != maxAmmo)
+                if (MaxAmmo > maxAmmo)
                     size.X += Terraria.GameContent.TextureAssets.Item[ItemID.HighVelocityBullet].Width() / 2;
                 size.Y = Terraria.GameContent.TextureAssets.Item[ItemID.HighVelocityBullet].Height() * rowCount - ((rowCount - 1) * 4);
                 Width.Set(size.X, 0);

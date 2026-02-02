@@ -10,6 +10,7 @@ using System.Runtime.InteropServices.Marshalling;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria;
+using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -17,18 +18,38 @@ using Terraria.ModLoader.IO;
 
 namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
 {
-    public partial class Fighters : GlobalNPC
+    public partial class Fighters : GlobalNPC, OnAnyPlayerHit.IGlobal
     {
         public override bool InstancePerEntity => true;
         public int CustomFrameY = 0;
         public int CustomFrameCounter = 0;
         public bool ShouldWalk = false;
-        public int[] ExtraAI = {0, 0, 0, 0};
+        public int[] ExtraAI = { 0, 0, 0, 0 };
         public bool JustJumped = false;
 
         public float WalkSpeed = 2;
         public float Acceleration = 0.1f;
         public float JumpSpeed = 8;
+
+        public override void Load()
+        {
+            if (!Main.dedServ)
+            {
+                Fighters.BloodCrawler_Pounce = ModContent.Request<Texture2D>("TerrariaCells/Common/Assets/BloodcrawlerPounce");
+            }
+        }
+
+        public override bool AppliesToEntity(NPC entity, bool lateInstantiation)
+        {
+            return Mummies.Contains(entity.type)
+                || Ghouls.Contains(entity.type)
+                || entity.type == NPCID.CultistArcherBlue
+                || entity.type == NPCID.BloodCrawler
+                || entity.type == NPCID.BloodCrawlerWall
+                || entity.type == NPCID.DesertScorpionWalk
+                || entity.type == NPCID.DesertScorpionWall;
+        }
+
         public override void SetStaticDefaults()
         {
             for (int i = 0; i < Ghouls.Length; i++)
@@ -54,10 +75,20 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
                 WalkSpeed = 1;
                 JumpSpeed = 8;
             }
+            if (entity.type == NPCID.BloodCrawler)
+            {
+                ExtraAI[1] = 1; //tell bloodcrawler to transform if on wall (only in the first ai cycle)
+            }
+            if (entity.type == NPCID.BloodCrawlerWall)
+            {
+                ExtraAI[1] = 1; //tell bloodcrawler to transform if not on wall (only in the first ai cycle)
+                ExtraAI[2] = 1; //go counterclockwise when idling
+            }
         }
         public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
-            if (npc.type == NPCID.DesertScorpionWalk) {
+            if (npc.type == NPCID.DesertScorpionWalk)
+            {
                 return DrawSandPoacher(npc, spriteBatch, screenPos, drawColor);
             }
             if (Ghouls.Contains(npc.type))
@@ -72,13 +103,13 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
             {
                 return DrawCultistArcher(npc, spriteBatch, screenPos, drawColor);
             }
-            if (BloodCrawlers.Contains(npc.type))
+            if (npc.type == NPCID.BloodCrawler)
             {
                 return DrawBloodCrawler(npc, spriteBatch, screenPos, drawColor);
             }
             return base.PreDraw(npc, spriteBatch, screenPos, drawColor);
         }
-        
+
         public override void FindFrame(NPC npc, int frameHeight)
         {
             if (npc.type == NPCID.DesertScorpionWalk)
@@ -105,14 +136,14 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
             {
                 Main.instance.DrawCacheNPCsBehindNonSolidTiles.Add(index);
             }
-            
+
         }
         public override bool PreAI(NPC npc)
         {
-			if (Common.Systems.AIOverwriteSystem.AITypeExists(npc.type))
-				return base.PreAI(npc);
+            //if (Common.Systems.AIOverwriteSystem.AITypeExists(npc.type))
+            //    return base.PreAI(npc);
 
-            if (npc.aiStyle == NPCAIStyleID.Fighter|| npc.type == NPCID.CultistArcherBlue)
+            if (npc.aiStyle == NPCAIStyleID.Fighter || npc.type == NPCID.CultistArcherBlue)
             {
                 Update(npc);
                 Player target = null;
@@ -149,6 +180,19 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
                 return false;
             }
             return base.PreAI(npc);
+        }
+
+        public void OnAnyPlayerHit(NPC npc, Player attacker, NPC.HitInfo hit, int damage)
+        {
+            if (npc.type == NPCID.BloodCrawler)
+            {
+                BloodCrawler_OnHit(npc, attacker, hit, damage);
+            }
+        }
+
+        public override void OnSpawn(NPC npc, IEntitySource source)
+        {
+            CombatNPC.ToggleContactDamage(npc, false);
         }
 
         public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)

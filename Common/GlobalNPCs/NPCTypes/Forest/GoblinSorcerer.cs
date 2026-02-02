@@ -4,28 +4,35 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria;
+using Terraria.ID;
+using Terraria.ModLoader;
+
 using TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared;
 using static TerrariaCells.Common.Utilities.NPCHelpers;
 
 namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Forest
 {
-	public class GoblinSorcerer : AIType
+	public class GoblinSorcerer : Terraria.ModLoader.GlobalNPC, OnAnyPlayerHit.IGlobal
 	{
-		public override bool AppliesToNPC(int npcType)
-		{
-			return npcType.Equals(Terraria.ID.NPCID.GoblinSorcerer);
-		}
+        public override bool AppliesToEntity(NPC entity, bool lateInstantiation)
+        {
+            return entity.type == NPCID.GoblinSorcerer || entity.type == NPCID.Tim;
+        }
+        //public override bool AppliesToNPC(int npcType)
+		//{
+		//	//return npcType.Equals(Terraria.ID.NPCID.GoblinSorcerer);
+
+		//	return npcType == NPCID.GoblinSorcerer || npcType == NPCID.Tim;
+        //}
 
 		const int Idle = 0;
 		const int Casting = 1;
 		const int Teleporting = 2;
 
-		public override void Behaviour(NPC npc)
+		public override bool PreAI(NPC npc)
 		{
-			if (!npc.HasValidTarget)
-				npc.TargetClosest();
-
-			switch (npc.Phase())
+            float oldAI = npc.ai[1];
+            switch (npc.Phase())
 			{
 				case Idle:
 					IdleAI(npc);
@@ -39,10 +46,16 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Forest
 				default:
 					npc.Phase(Teleporting);
 					break;
-			}
-		}
-		private void IdleAI(NPC npc)
+            }
+            if (npc.ai[1] != oldAI)
+                npc.netUpdate = true;
+
+            return false;
+        }
+        private void IdleAI(NPC npc)
 		{
+            npc.TargetClosest(false);
+
 			if (
 				npc.TryGetTarget(out Entity target)
 				&& npc.TargetInAggroRange(target, 480, false))
@@ -52,7 +65,9 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Forest
 				return;
 			}
 
-			npc.dontTakeDamage = true;
+            CombatNPC.ToggleContactDamage(npc, false);
+
+            npc.dontTakeDamage = true;
 			npc.velocity.Y += 0.14f;
 
 			if (Main.rand.NextBool(3))
@@ -69,13 +84,18 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Forest
 		private void CastingAI(NPC npc)
 		{
 			int timer = npc.Timer();
-			if (timer % 15 == 0)
+			if (timer % 15 == 0 && Main.netMode != NetmodeID.MultiplayerClient)
 			{
-				NPC ball = NPC.NewNPCDirect(npc.GetSource_FromAI(), npc.Center, Terraria.ID.NPCID.ChaosBall, ai0: 1);
+                NPC ball = NPC.NewNPCDirect(npc.GetSource_FromAI(), npc.Center, Terraria.ID.NPCID.ChaosBall, ai0: 1);
                 ball.target = npc.target;
-                ball.velocity = npc.DirectionTo(Main.player[npc.target].Center) * 3.6f;
+                //ball.velocity = npc.DirectionTo(Main.player[npc.target].Center) * 3.6f;
+                //ball.velocity = npc.DirectionTo(Main.player[npc.target].Center) * 5.0f;
+
+                float speed = npc.type == NPCID.Tim ? 7.2f : 3.6f;
+                ball.velocity = npc.DirectionTo(Main.player[npc.target].Center) * speed;
+
                 ball.damage = npc.damage;
-				ball.netUpdate = true;
+                ball.netUpdate = true;
 			}
 			if (timer > 45 * 3)
 			{
@@ -169,6 +189,7 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Forest
 
 				npc.ai[2] = ground.X;
 				npc.ai[3] = ground.Y;
+                npc.netUpdate = true;
 			}
 			if (timer > 210)
 			{
@@ -182,7 +203,9 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Forest
 					npc.position = new Vector2(npc.ai[2], npc.ai[3] - npc.height);
 					npc.ai[2] = 0;
 					npc.ai[3] = 0;
-				}
+                    npc.netUpdate = true;
+                    npc.TargetClosest(false);
+                }
 				npc.velocity.Y += 0.14f;
 				if (timer > 255)
 					npc.Phase(Casting);
@@ -196,5 +219,23 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Forest
 			npc.velocity.X *= 0.8f;
 			npc.DoTimer();
 		}
-	}
+
+        public override bool? CanFallThroughPlatforms(NPC npc) => false;
+
+        public void OnAnyPlayerHit(NPC npc, Player attacker, NPC.HitInfo info, int damage)
+        {
+            if (info.DamageType.CountsAsClass(DamageClass.Melee))
+            {
+                switch ((int)npc.ai[1])
+                {
+                    case Casting:
+                        npc.ai[0] = MathF.Max(npc.ai[0] - 15, 0);
+                        break;
+                    case Teleporting:
+                        npc.ai[0] = MathF.Max(npc.ai[0] - 5, 0);
+                        break;
+                }
+            }
+        }
+    }
 }

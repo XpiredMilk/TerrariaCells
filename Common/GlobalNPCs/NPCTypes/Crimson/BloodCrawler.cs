@@ -2,32 +2,30 @@
 using ReLogic.Content;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Terraria;
-using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
+
+using TerrariaCells.Common.Utilities;
 
 namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
 {
     public partial class Fighters
     {
+        private static Asset<Texture2D> BloodCrawler_Pounce;
         const float bloodCrawlerAttackMaxBlockDistanceX = 20f;
         const float bloodCrawlerAttackMaxBlockDistanceY = 4f;
-        const int bloodCrawlerChargeUpTime = 70;
+        const int bloodCrawlerChargeUpTime = 60;
         const int bloodCrawlerDelayBetweenAttacks = 30;
 
-        int[] BloodCrawlers = { NPCID.BloodCrawler, NPCID.BloodCrawlerWall };
+        private static int[] BloodCrawlers { get; set; } = { NPCID.BloodCrawler, NPCID.BloodCrawlerWall };
 
         public bool DrawBloodCrawler(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
             if (ExtraAI[0] > 0)
             {
-                Asset<Texture2D> pounce = ModContent.Request<Texture2D>("TerrariaCells/Common/Assets/BloodcrawlerPounce");
                 spriteBatch.Draw(
-                    pounce.Value,
+                    BloodCrawler_Pounce.Value,
                     npc.position - screenPos,
                     new Rectangle(0, (int)CustomFrameY * 40 + 2, 66, 38),
                     drawColor,
@@ -63,6 +61,13 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
 
         public void BloodCrawlerAI(NPC npc, Player target)
         {
+            if (ExtraAI[1] == 1 && npc.NPCCanStickToWalls())
+            {
+                npc.Transform(NPCID.BloodCrawlerWall);
+                ExtraAI[1] = 0;
+                return;
+            }
+            ExtraAI[1] = 0;
 
             if (target == null)
             {
@@ -111,26 +116,38 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
 
                 npc.GetGlobalNPC<CombatNPC>().allowContactDamage = false;
 
-                if (npc.NPCCanStickToWalls())
-                {
-                    npc.Transform(NPCID.BloodCrawlerWall);
-                }
                 return;
             }
             void BloodCrawlerAttackingAI()
             {
                 ExtraAI[0]++;
 
+                if (ExtraAI[0] == 1)
+                {
+                    if (npc.TryGetTarget(out Entity target))
+                    {
+                        npc.ai[2] = MathF.Sign(target.position.X - npc.position.X);
+                    }
+                    else if (MathF.Abs(npc.ai[2]) != 1)
+                    {
+                        npc.ai[2] = npc.spriteDirection;
+                    }
+                }
+
                 if (ExtraAI[0] < bloodCrawlerChargeUpTime)
                 {
                     npc.GetGlobalNPC<CombatNPC>().allowContactDamage = false;
                     npc.velocity = Vector2.Zero;
                     ShouldWalk = false;
+                    npc.direction = MathF.Sign(npc.ai[2]);
+                    npc.spriteDirection = npc.direction;
                 }
                 else if (ExtraAI[0] == bloodCrawlerChargeUpTime)
                 {
                     npc.GetGlobalNPC<CombatNPC>().allowContactDamage = true;
-                    npc.velocity = new Vector2(npc.direction * 10, -5);
+                    npc.velocity = new Vector2(npc.ai[2] * 10, -5);
+                    npc.direction = MathF.Sign(npc.ai[2]);
+                    npc.spriteDirection = npc.direction;
                 }
                 else if (ExtraAI[0] > bloodCrawlerChargeUpTime + 10 && npc.collideY)
                 {
@@ -138,184 +155,16 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
                     ExtraAI[0] = -bloodCrawlerDelayBetweenAttacks;
                 }
             }
-
         }
 
-        public void BloodCrawlerWallAI(NPC npc)
+        void BloodCrawler_OnHit(NPC npc, Player player, NPC.HitInfo hit, int dmg)
         {
-            const float bloodCrawlerSpeedFactor = 1.5f;
-
-            //make sure npc is real
-            if (npc == null || !npc.active) return;
-
-            npc.GetGlobalNPC<CombatNPC>().allowContactDamage = true;
-
-            npc.oldVelocity /= bloodCrawlerSpeedFactor;
-            npc.velocity /= bloodCrawlerSpeedFactor;
-
-            VanillaBloodCrawlerWallAI(npc);
-
-            npc.oldVelocity *= bloodCrawlerSpeedFactor;
-            npc.velocity *= bloodCrawlerSpeedFactor;
-        }
-
-        //copied and adjusted from terraria source code
-        void VanillaBloodCrawlerWallAI(NPC npc)
-        {
-            if (npc.target < 0 || npc.target == 255 || Main.player[npc.target].dead)
+            if (hit.DamageType.CountsAsClass(DamageClass.Melee))
             {
-                npc.TargetClosest();
-            }
-            Vector2 npcCenter = new Vector2(npc.position.X + (float)npc.width * 0.5f, npc.position.Y + (float)npc.height * 0.5f);
-            Vector2 npcToTarget = new Vector2(
-                Main.player[npc.target].position.X + (float)(Main.player[npc.target].width / 2),
-                Main.player[npc.target].position.Y + (float)(Main.player[npc.target].height / 2)
-                );
-            npcToTarget.X = (int)(npcToTarget.X / 8f) * 8;
-            npcToTarget.Y = (int)(npcToTarget.Y / 8f) * 8;
-            npcCenter.X = (int)(npcCenter.X / 8f) * 8;
-            npcCenter.Y = (int)(npcCenter.Y / 8f) * 8;
-            npcToTarget.X -= npcCenter.X;
-            npcToTarget.Y -= npcCenter.Y;
-            if (npc.confused)
-            {
-                npcToTarget.X *= -2f;
-                npcToTarget.Y *= -2f;
-            }
-            float npcToTargetLength = (float)Math.Sqrt(npcToTarget.X * npcToTarget.X + npcToTarget.Y * npcToTarget.Y);
-            if (npcToTargetLength == 0f)
-            {
-                npcToTarget.X = npc.velocity.X;
-                npcToTarget.Y = npc.velocity.Y;
-            }
-            else
-            {
-                npcToTarget *= 2f / npcToTargetLength;
-            }
-            if (Main.player[npc.target].dead)
-            {
-                npcToTarget.X = (float)npc.direction;
-                npcToTarget.Y = -1f;
-            }
-            npc.spriteDirection = -1;
-            if (!Collision.CanHit(npc.position, npc.width, npc.height, Main.player[npc.target].position, Main.player[npc.target].width, Main.player[npc.target].height))
-            {
-                npc.ai[0] += 1f;
-                if (npc.ai[0] > 0f)
+                if (ExtraAI[0] > 0 && ExtraAI[0] < bloodCrawlerChargeUpTime)
                 {
-                    npc.velocity.Y += 0.023f;
+                    ExtraAI[0] = Math.Max(ExtraAI[0] - 5, 0);
                 }
-                else
-                {
-                    npc.velocity.Y -= 0.023f;
-                }
-                if (npc.ai[0] < -100f || npc.ai[0] > 100f)
-                {
-                    npc.velocity.X += 0.023f;
-                }
-                else
-                {
-                    npc.velocity.X -= 0.023f;
-                }
-                if (npc.ai[0] > 200f)
-                {
-                    npc.ai[0] = -200f;
-                }
-                npc.velocity += npcToTarget * 0.007f;
-                npc.rotation = (float)Math.Atan2(npc.velocity.Y, npc.velocity.X);
-
-                if (npc.velocity.X > 1.5 || npc.velocity.X < -1.5)
-                {
-                    npc.velocity.X *= 0.9f;
-                }
-                if (npc.velocity.Y > 1.5 || npc.velocity.Y < -1.5)
-                {
-                    npc.velocity.Y *= 0.9f;
-                }
-
-                if (npc.velocity.X > 3f || npc.velocity.X < -3f)
-                {
-                    npc.velocity.X = 3f;
-                }
-                if (npc.velocity.Y > 3f || npc.velocity.Y < -3f)
-                {
-                    npc.velocity.Y = 3f;
-                }
-            }
-            else
-            {
-                if (npc.velocity.X < npcToTarget.X)
-                {
-                    npc.velocity.X += 0.08f;
-                    if (npc.velocity.X < 0f && npcToTarget.X > 0f)
-                    {
-                        npc.velocity.X += 0.08f;
-                    }
-                }
-                else if (npc.velocity.X > npcToTarget.X)
-                {
-                    npc.velocity.X -= 0.08f;
-                    if (npc.velocity.X > 0f && npcToTarget.X < 0f)
-                    {
-                        npc.velocity.X -= 0.08f;
-                    }
-                }
-                if (npc.velocity.Y < npcToTarget.Y)
-                {
-                    npc.velocity.Y += 0.08f;
-                    if (npc.velocity.Y < 0f && npcToTarget.Y > 0f)
-                    {
-                        npc.velocity.Y += 0.08f;
-                    }
-                }
-                else if (npc.velocity.Y > npcToTarget.Y)
-                {
-                    npc.velocity.Y -= 0.08f;
-                    if (npc.velocity.Y > 0f && npcToTarget.Y < 0f)
-                    {
-                        npc.velocity.Y -= 0.08f;
-                    }
-                }
-                npc.rotation = (float)Math.Atan2(npcToTarget.Y, npcToTarget.X);
-            }
-            if (npc.collideX)
-            {
-                npc.netUpdate = true;
-                npc.velocity.X = -0.5f * npc.oldVelocity.X;
-                if (npc.direction == -1 && npc.velocity.X > 0f && npc.velocity.X < 2f)
-                {
-                    npc.velocity.X = 2f;
-                }
-                if (npc.direction == 1 && npc.velocity.X < 0f && npc.velocity.X > -2f)
-                {
-                    npc.velocity.X = -2f;
-                }
-            }
-            if (npc.collideY)
-            {
-                npc.netUpdate = true;
-                npc.velocity.Y = -0.5f * npc.oldVelocity.Y;
-                if (npc.velocity.Y > 0f && (double)npc.velocity.Y < 1.5)
-                {
-                    npc.velocity.Y = 2f;
-                }
-                if (npc.velocity.Y < 0f && (double)npc.velocity.Y > -1.5)
-                {
-                    npc.velocity.Y = -2f;
-                }
-            }
-
-            if (((npc.velocity.X > 0f && npc.oldVelocity.X < 0f) || (npc.velocity.X < 0f && npc.oldVelocity.X > 0f) || (npc.velocity.Y > 0f && npc.oldVelocity.Y < 0f) || (npc.velocity.Y < 0f && npc.oldVelocity.Y > 0f)) && !npc.justHit)
-            {
-                npc.netUpdate = true;
-            }
-            if (Main.netMode == NetmodeID.MultiplayerClient)
-            {
-                return;
-            }
-            if (!npc.NPCCanStickToWalls())
-            {
-                npc.Transform(239);
             }
         }
     }

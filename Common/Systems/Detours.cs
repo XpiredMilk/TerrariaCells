@@ -25,8 +25,14 @@ namespace TerrariaCells.Common.Systems
 {
     public class Detours : ModSystem
     {
+        public override void ClearWorld()
+        {
+            Mod.Logger.Debug("Action: " + RewardTrackerSystem.trackerState + "\n" + RewardTrackerSystem.LevelTime.ToString());
+            RewardTrackerSystem.UpdateTracker(RewardTrackerSystem.TrackerAction.Stop);
+        }
+
         private static bool isNewWorld = false;
-		public override void Load()
+        public override void Load()
         {
             On_Main.DoDraw_UpdateCameraPosition += On_Main_DoDraw_UpdateCameraPosition;
             On_Player.PickupItem += On_Player_PickupItem;
@@ -36,6 +42,7 @@ namespace TerrariaCells.Common.Systems
             On_Player.QuickMinecartSnap += On_Player_QuickMinecartSnap;
             On_Player.QuickMinecart += On_Player_QuickMinecart;
             Terraria.UI.IL_ItemSlot.OverrideHover_ItemArray_int_int += IL_OverrideHover_ItemArray_int_int;
+            On_Main.HandleMeteorFall += On_Main_HandleMeteorFall;
         }
 
         public override void Unload()
@@ -49,7 +56,11 @@ namespace TerrariaCells.Common.Systems
             Terraria.UI.IL_ItemSlot.OverrideHover_ItemArray_int_int -= IL_OverrideHover_ItemArray_int_int;
         }
 
-
+        private void On_Main_HandleMeteorFall(On_Main.orig_HandleMeteorFall orig)
+        {
+            WorldGen.spawnMeteor = false;
+            orig.Invoke();
+        }
 
         private void IL_OverrideHover_ItemArray_int_int(MonoMod.Cil.ILContext context)
         {

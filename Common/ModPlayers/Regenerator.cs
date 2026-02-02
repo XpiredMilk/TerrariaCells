@@ -18,7 +18,7 @@ namespace TerrariaCells.Common.ModPlayers
 	//ModPlayer handling health and regeneration aspects
 	public class Regenerator : ModPlayer
 	{
-        MethodInfo PlayerResourceSetsManager_SetActive_string = typeof(PlayerResourceSetsManager).GetMethod("SetActive", BindingFlags.NonPublic | BindingFlags.Instance, [typeof(string)]);
+        public static readonly MethodInfo PlayerResourceSetsManager_SetActive_string = typeof(PlayerResourceSetsManager).GetMethod("SetActive", BindingFlags.NonPublic | BindingFlags.Instance, [typeof(string)]);
         public override void Load()
         {
             //TODO: Change this to IL Edit
@@ -31,11 +31,6 @@ namespace TerrariaCells.Common.ModPlayers
 
             IL_HorizontalBarsPlayerResourcesDisplaySet.Draw += IL_HorizontalBarsPlayerResourcesDisplaySet_Draw;
             IL_HorizontalBarsPlayerResourcesDisplaySet.LifeFillingDrawer += IL_HealthbarTextureSelect;
-
-            if (!Main.dedServ)
-            {
-                PlayerResourceSetsManager_SetActive_string.Invoke(Main.ResourceSetsManager, ["HorizontalBars"]);
-            }
         }
 
         public override void Unload()
@@ -230,6 +225,7 @@ namespace TerrariaCells.Common.ModPlayers
 			}
 		}
 
+        private FieldInfo PlayerResourceSetsManager_selectedSet = typeof(PlayerResourceSetsManager).GetField("selectedSet", BindingFlags.NonPublic | BindingFlags.Instance);
         private void DisableHealthbarStyleChange(On_PlayerResourceSetsManager.orig_CycleResourceSet orig, PlayerResourceSetsManager self)
         {
             return;
@@ -244,9 +240,9 @@ namespace TerrariaCells.Common.ModPlayers
 		private int damageTime;
 		private float antiRegen;
 
-		private float TimeAmplitude => damageBuffer * INV_STAGGER_POTENCY; //Used for calculations, opposite of MaxTime
-		private float MaxTime => damageBuffer * STAGGER_POTENCY; //Time it will take for damage to stop ticking.
-		private float DamageLeft => -MathF.Sqrt(TimeAmplitude * damageTime) + damageBuffer; //Remaining amount of damage for the player to take
+		public float TimeAmplitude => damageBuffer * INV_STAGGER_POTENCY; //Used for calculations, opposite of MaxTime
+		public float MaxTime => damageBuffer * STAGGER_POTENCY; //Time it will take for damage to stop ticking.
+		public float DamageLeft => -MathF.Sqrt(TimeAmplitude * damageTime) + damageBuffer; //Remaining amount of damage for the player to take
 
 		//Mathematics used for Damage Staggering:
 			//Damage Left = -sqrt(TimeAmplitude * damageTime) + damageBuffer

@@ -83,8 +83,14 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
             }
         }
 
-        public void SandPoacherAI(NPC npc, Player target)
+        public void SandPoacherAI(NPC npc, Player? target)
         {
+            if (target is null)
+            {
+                ShouldWalk = false;
+                return;
+            }
+
             int timeWalking = 200;
             int timeDigging = 100;
             int stabTime = 30;
@@ -135,8 +141,12 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
                 Dust.NewDustDirect(npc.BottomLeft, npc.width, 0, DustID.Sand, 0, -4);
             }
 
+            bool validTargetInRange = npc.TargetInAggroRange(280);
+            if (!validTargetInRange)
+                this.ShouldWalk = false;
+
             //start dig
-            if (npc.ai[2] >= timeWalking && npc.ai[3] == 0 && npc.collideY && target != null)
+            if (validTargetInRange && npc.ai[2] >= timeWalking && npc.ai[3] == 0 && npc.collideY && target != null)
             {
                 npc.hide = true;
                 npc.ai[2] = 0;
@@ -162,6 +172,7 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
             //stab
             if (npc.ai[3] == 2)
             {
+                CombatNPC.ToggleContactDamage(npc, true);
                 ShouldWalk = false;
                 npc.velocity.X *= 0.9f;
                 npc.direction = npc.oldDirection;
@@ -180,6 +191,7 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
 
                 if (ExtraAI[0] > stabTime)
                 {
+                    CombatNPC.ToggleContactDamage(npc, false);
                     npc.ai[3] = 3;
                     ExtraAI[0] = 0;
                     CustomFrameCounter = 0;
@@ -190,6 +202,7 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
             //wait
             if (npc.ai[3] == 3)
             {
+                CombatNPC.ToggleContactDamage(npc, false);
                 ShouldWalk = false;
                 npc.velocity.X *= 0.9f;
                 npc.direction = npc.oldDirection;
@@ -200,7 +213,6 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
                     npc.ai[3] = 0;
                 }
             }
-
         }
     }
 }

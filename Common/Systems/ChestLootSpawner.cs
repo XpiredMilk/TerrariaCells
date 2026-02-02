@@ -7,6 +7,8 @@ using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.ModLoader.IO;
+
 using TerrariaCells.Common.Configs;
 using TerrariaCells.Common.GlobalItems;
 
@@ -26,10 +28,8 @@ public class ChestLootSpawner : ModSystem, IEntitySource
         var buf = new byte[stream.Length];
         stream.Read(buf);
         ChestLootTables = JsonSerializer.Deserialize<Dictionary<string, int[]>>(buf);
-    }
 
-    public override void SetStaticDefaults()
-    {
+        ///See <see cref="ModPlayers.RewardPlayer."/>
         On_Player.OpenChest += OnChestOpen;
     }
 
@@ -88,7 +88,7 @@ public class ChestLootSpawner : ModSystem, IEntitySource
         }
         string tileFrame = tileFrameX + tileFrameY;
 
-        Mod.Logger.Info("Chest opened: " + tileFrame);
+        //Mod.Logger.Info("Chest opened: " + tileFrame);
 
         if (DevConfig.Instance.EnableChestChanges)
         {
@@ -118,6 +118,8 @@ public class ChestLootSpawner : ModSystem, IEntitySource
                         NPC.NewNPC(this, x * 16, y * 16, NPCID.Firefly);
                     }
                 }
+
+                RewardTrackerSystem.UpdateChests_Open(x, y);
             }
         }
 
@@ -152,7 +154,7 @@ public class ChestLootSpawner : ModSystem, IEntitySource
         }
         string tileFrame = tileFrameX + tileFrameY;
 
-        Mod.Logger.Info("Chest opened: " + tileFrame);
+        //Mod.Logger.Info("Chest opened: " + tileFrame);
 
         if (DevConfig.Instance.EnableChestChanges)
         {
@@ -185,12 +187,26 @@ public class ChestLootSpawner : ModSystem, IEntitySource
                 } else {
                     NPC.NewNPC(this, (x + 1) * 16, y * 16, NPCID.Firefly);
                 }
+
+                RewardTrackerSystem.UpdateChests_Open(x, y, self);
+
+                lootedChests.Add(newChest);
             }
         }
-
-        if (isNewChest)
+    }
+    public override void SaveWorldData(TagCompound tag)
+    {
+        tag.Add(nameof(lootedChests), lootedChests);
+    }
+    public override void LoadWorldData(TagCompound tag)
+    {
+        try
         {
-            lootedChests.Add(newChest);
+            lootedChests = (List<int>)tag.GetList<int>(nameof(lootedChests)) ?? new List<int>();
+        }
+        catch (System.Exception x)
+        {
+            lootedChests = new List<int>();
         }
     }
 }

@@ -1,18 +1,17 @@
 ﻿using System;
 using Terraria;
-using TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared;
 using static TerrariaCells.Common.Utilities.NPCHelpers;
 using TerrariaCells.Common.Utilities;
-using static Terraria.GameContent.Animations.IL_Actions.Sprites;
+using Terraria.ModLoader;
 
 namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Forest
 {
-	public class GoblinArcher : AIType
+	public class GoblinArcher : Terraria.ModLoader.GlobalNPC, Common.GlobalNPCs.PreFindFrame.IGlobal, OnAnyPlayerHit.IGlobal
 	{
-		public override bool AppliesToNPC(int npcType)
-		{
-			return npcType.Equals(Terraria.ID.NPCID.GoblinArcher);
-		}
+        public override bool AppliesToEntity(NPC entity, bool lateInstantiation)
+        {
+            return entity.type == Terraria.ID.NPCID.GoblinArcher;
+        }
 
 		const int Idle = 0;
 		const int ApproachTarget = 1;
@@ -30,13 +29,15 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Forest
             npc.ai[1] = Idle;
             npc.ai[2] = 0;
             npc.ai[3] = 0;
+            npc.netUpdate = true;
         }
 
-		public override void Behaviour(NPC npc)
+		public override bool PreAI(NPC npc)
 		{
 			if (!npc.HasValidTarget)
 				npc.TargetClosest(false);
 
+            float oldAI = npc.ai[1];
             switch (npc.ai[1])
 			{
 				case Idle:
@@ -55,7 +56,10 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Forest
                     ResetAI(npc);
 					break;
 			}
+            if (npc.ai[1] != oldAI)
+                npc.netUpdate = true;
             npc.spriteDirection = npc.direction;
+            return false;
 		}
 
 		void IdleAI(NPC npc)
@@ -67,7 +71,9 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Forest
 				return;
 			}
 
-			npc.direction = MathF.Sign(npc.ai[2]);
+            CombatNPC.ToggleContactDamage(npc, false);
+
+            npc.direction = MathF.Sign(npc.ai[2]);
 
 			float newVel = npc.velocity.X + npc.direction * Accel;
 			if (npc.direction == 0)
@@ -243,14 +249,17 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Forest
 			}
 			else if (time > 75)
 			{
-				//Just add new projectile types in if you want to adjust this I guess I dunno
-				int[] arrowsToFire = new int[] { Terraria.ID.ProjectileID.WoodenArrowHostile, Terraria.ID.ProjectileID.FireArrow };
+                if (Main.netMode != Terraria.ID.NetmodeID.MultiplayerClient)
+                {
+                    //Just add new projectile types in if you want to adjust this I guess I dunno
+                    int[] arrowsToFire = new int[] { Terraria.ID.ProjectileID.WoodenArrowHostile, Terraria.ID.ProjectileID.FireArrow };
 
-                float rotation = npc.ai[3];
-                Vector2 vel = Vector2.UnitX.RotatedBy(rotation) * 9f;
-				Projectile proj = Projectile.NewProjectileDirect(npc.GetSource_FromAI(), npc.Center, vel, Main.rand.Next(arrowsToFire), TCellsUtils.ScaledHostileDamage(npc.damage, 1.5f, 2f), 1f, Main.myPlayer);
-				proj.hostile = true;
-				proj.friendly = false;
+                    float rotation = npc.ai[3];
+                    Vector2 vel = Vector2.UnitX.RotatedBy(rotation) * 9f;
+                    Projectile proj = Projectile.NewProjectileDirect(npc.GetSource_FromAI(), npc.Center, vel, Main.rand.Next(arrowsToFire), TCellsUtils.ScaledHostileDamage(npc.damage, 1.5f, 2f), 1f, Main.myPlayer);
+                    proj.hostile = true;
+                    proj.friendly = false;
+                }
 
                 if (npc.TargetInAggroRange(NumberHelpers.ToTileDist(22), false))
                 {
@@ -271,7 +280,7 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Forest
 			npc.ai[0]++;
 		}
 
-        public override bool FindFrame(NPC npc, int frameHeight)
+        public bool PreFindFrame(NPC npc, int frameHeight)
         {
             //Frames 0-4 = Aim bow down-up
             //Frames 5,6 = ???
@@ -315,6 +324,23 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Forest
                 }
             }
             return false;
+        }
+
+        public override bool? CanFallThroughPlatforms(NPC npc) => false;
+
+        public void OnAnyPlayerHit(NPC npc, Player attacker, NPC.HitInfo info, int damage)
+        {
+            if (info.DamageType.CountsAsClass(DamageClass.Melee))
+            {
+                switch ((int)npc.ai[1])
+                {
+                    case FireArrows:
+                        if (npc.ai[0] < 25)
+                            break;
+                        npc.ai[0] = MathF.Max(npc.ai[0] - 10, 25);
+                        break;
+                }
+            }
         }
     }
 }

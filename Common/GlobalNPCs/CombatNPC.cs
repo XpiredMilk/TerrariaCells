@@ -7,13 +7,21 @@ using Microsoft.Xna.Framework.Graphics;
 using TerrariaCells.Common.Utilities;
 
 using static TerrariaCells.Common.Utilities.NPCHelpers;
+using System.Linq;
+using Terraria.ModLoader.IO;
+using System.IO;
+using TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared;
 
 namespace TerrariaCells.Common.GlobalNPCs
 {
 	public class CombatNPC : GlobalNPC
 	{
-		public override bool InstancePerEntity => true;
-		public bool allowContactDamage = false;
+        public override bool InstancePerEntity => true;
+		public bool allowContactDamage = true;
+        private bool? canDrawActiveHitbox = null;
+        public bool CanDrawActiveHitbox(NPC npc) => !Main.npc.Where(x => x.active).Any(x => x.realLife == npc.whoAmI && !x.GetGlobalNPC<CombatNPC>().allowContactDamage)
+            && _canDrawActiveHitbox_DisableWorms(npc);
+        private bool _canDrawActiveHitbox_DisableWorms(NPC npc) => !new HashSet<int>([NPCID.DevourerHead, NPCID.GiantWormHead, NPCID.StardustWormHead, NPCID.DiggerHead]).Contains(npc.type);
 
 		public override bool CanHitPlayer(NPC npc, Player target, ref int cooldownSlot)
 		{
@@ -21,17 +29,55 @@ namespace TerrariaCells.Common.GlobalNPCs
 			return base.CanHitPlayer(npc, target, ref cooldownSlot);
 		}
 
-		public override Color? GetAlpha(NPC npc, Color drawColor)
-		{
-			Color? returnVal = base.GetAlpha(npc, drawColor);
-			if (npc.dontTakeDamage) returnVal = Color.Lerp(drawColor, Color.DarkSlateGray * 0.67f, 0.5f);
-			if (npc.GetGlobalNPC<CombatNPC>().allowContactDamage) returnVal = Color.Lerp(drawColor, Color.IndianRed * (drawColor.A / 255f), 0.3f);
-			return returnVal;
-		}
+        public static void ToggleContactDamage(NPC npc, bool value) => npc.GetGlobalNPC<CombatNPC>().allowContactDamage = value;
+        public override void DrawEffects(NPC npc, ref Color drawColor)
+        {
+            if (canDrawActiveHitbox is null)
+                canDrawActiveHitbox = CanDrawActiveHitbox(npc);
+            if (allowContactDamage && canDrawActiveHitbox == true && npc.lifeMax > 1)
+            {
+                byte b;
+                byte b2;
+                byte b3;
+                if (!(npc.friendly || npc.catchItem > 0 || (npc.damage == 0 && npc.lifeMax == 5)))
+                {
+                    b = byte.MaxValue;
+                    b2 = 50;
+                    b3 = 50;
+                }
+                else
+                {
+                    return;
+                }
+                if (drawColor.R < b)
+                {
+                    drawColor.R = b;
+                }
+                if (drawColor.G < b2)
+                {
+                    drawColor.G = b2;
+                }
+                if (drawColor.B < b3)
+                {
+                    drawColor.B = b3;
+                }
+            }
+        }
 
-		public static void ToggleContactDamage(NPC npc, bool value) => npc.GetGlobalNPC<CombatNPC>().allowContactDamage = value;
+        //As an aside, I hate that this is called "send extra AI" when it should just have been netsend like literally every other hook of its nature
+        //I'm not sending AI here, as it turns out. ]:/
+        public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)
+        {
+            bitWriter.WriteBit(allowContactDamage);
 
-		public override void SetStaticDefaults()
+            //bitWriter.Flush(binaryWriter);
+        }
+        public override void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader)
+        {
+            allowContactDamage = bitReader.ReadBit();
+        }
+
+        public override void SetStaticDefaults()
 		{
 			NPCID.Sets.ProjectileNPC[NPCID.Creeper] = true;
 
@@ -46,6 +92,7 @@ namespace TerrariaCells.Common.GlobalNPCs
         }
 		public override void SetDefaults(NPC npc)
 		{
+            //Some levels will lead to more than one *other* level. Using a/b/.. to direct path in comments
 			switch (npc.type)
 			{
                 //Level 1
@@ -109,7 +156,22 @@ namespace TerrariaCells.Common.GlobalNPCs
                     return;
                 #endregion
 
-                //Level 3
+                //Level 2
+                #region Corruption
+                case NPCID.EaterofSouls:
+                    npc.lifeMax = 30;
+                    break;
+                case NPCID.DevourerHead:
+                    npc.lifeMax = 400;
+                    npc.damage = 40;
+                    break;
+                case NPCID.DevourerBody:
+                case NPCID.DevourerTail:
+                    npc.lifeMax = 400;
+                    break;
+                #endregion
+
+                //Level 3.a
                 #region Desert
                 case NPCID.Mummy:
 					npc.lifeMax = 400;
@@ -136,7 +198,7 @@ namespace TerrariaCells.Common.GlobalNPCs
                     break;
 				#endregion
 
-                //Level 3
+                //Level 3.b
                 #region Frozen City
                 case NPCID.CultistDevote:
                     npc.lifeMax = 100;
@@ -158,18 +220,56 @@ namespace TerrariaCells.Common.GlobalNPCs
                     break;
                 #endregion
 
-                //Level 4
+                //Level 4.a.a
                 #region Hive
                 case NPCID.Hornet:
                     npc.lifeMax = 175;
+                    break;
+                #endregion
+
+                //Level 4.b.a
+                #region Dungeon
+                case NPCID.DiabolistRed:
+                case NPCID.DiabolistWhite:
+                    npc.lifeMax = 125;
+                    npc.damage = 75;
+                    break;
+                case NPCID.RaggedCaster:
+                case NPCID.RaggedCasterOpenCoat:
+                    npc.lifeMax = 125;
+                    npc.damage = 60;
+                    break;
+                case NPCID.RustyArmoredBonesAxe:
+                case NPCID.RustyArmoredBonesFlail:
+                case NPCID.RustyArmoredBonesSword:
+                case NPCID.RustyArmoredBonesSwordNoArmor:
+                    npc.lifeMax = 400;
                     npc.damage = 60;
                     break;
                 #endregion
 
+                //Level 5
+                #region Caverns
+                case NPCID.GraniteFlyer: //Granite Elemental
+                    npc.lifeMax = 200;
+                    npc.damage = 80;
+                    break;
+                case NPCID.Skeleton:
+                    npc.lifeMax = 300;
+                    npc.damage = 60;
+                    break;
+                case NPCID.Tim:
+                    npc.lifeMax = 250;
+                    npc.damage = 60;
+                    break;
+                case NPCID.RockGolem:
+                    break;
+                #endregion
+
                 //Do early return if you don't want enemy to have 0 defence
-                //No point repeating the same line a bajillion times :)
+                //No point repeating the same line a bajillion times
                 default:
-					return;
+                    break;
 			}
 			npc.defense = 0;
 		}

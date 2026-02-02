@@ -18,7 +18,6 @@
         </Reference>
     </ItemGroup>
     <ItemGroup>
-      <Folder Include="Common\GlobalNPCs\NPCTypes\Corruption\" />
-      <Folder Include="Common\GlobalNPCs\NPCTypes\Hive\" />
+      <Folder Include="Common\Assets\World\" />
     </ItemGroup>
 </Project>
