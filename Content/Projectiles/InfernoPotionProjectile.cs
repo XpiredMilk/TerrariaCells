@@ -33,9 +33,8 @@ namespace TerrariaCells.Content.Projectiles
             Projectile.penetrate = -1;
             Projectile.width = Projectile.height = 185;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = -1;
+            Projectile.localNPCHitCooldown = 60*1;
         }
-
 
         public override void AI()
         {
@@ -55,12 +54,12 @@ namespace TerrariaCells.Content.Projectiles
                 Projectile.frameCounter = 0;
                 if (++Projectile.frame >= Main.projFrames[Type])
                     Projectile.frame = 0;
+            }
 
             Lighting.AddLight(Projectile.Center, 0.5f, 0.25f, 0f);
             Projectile.rotation += 0.05f;
             FadeInAndOut();
             SetScale();
-            }
         }
 
         //Circle collision hitbox
@@ -76,7 +75,7 @@ namespace TerrariaCells.Content.Projectiles
         //Apply on fire debuff
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
-            target.AddBuff(BuffID.OnFire, 5);
+            target.AddBuff(BuffID.OnFire, 60*5);
         }
 
         //Visual effects
