@@ -165,9 +165,15 @@ namespace TerrariaCells.Common.ModPlayers
         protected override void Draw(ref PlayerDrawSet drawInfo)
         {
             Asset<Texture2D> t = TextureAssets.Item[drawInfo.drawPlayer.HeldItem.type];
-
+            Item weapon = drawInfo.drawPlayer.HeldItem;
             WeaponPlayer player = drawInfo.drawPlayer.GetModPlayer<WeaponPlayer>();
             Vector2 position = drawInfo.drawPlayer.itemLocation - Main.screenPosition;
+
+            //Scale size of sprite to account for weapon size changes
+            float weaponScale = 1f;
+            CombinedHooks.ModifyItemScale(drawInfo.drawPlayer, weapon, ref weaponScale);
+            int scaledWidth = (int)(t.Width() * Math.Sqrt(weaponScale));
+            int scaledHeight = (int)(t.Height() * Math.Sqrt(weaponScale));
 
             if (Sword.IsBroadsword(drawInfo.heldItem))
             {
@@ -178,11 +184,11 @@ namespace TerrariaCells.Common.ModPlayers
 
                 SpriteEffects effects = SpriteEffects.None;
                 float rotationAdd = 0;
-                Vector2 origin = new Vector2(2, t.Height() - 2);
+                Vector2 origin = new Vector2(2, scaledHeight - 2);
                 if ((dir == -1 && swingDir == 1) || (swingDir == -1 && dir == 1))
                 {
                     effects = SpriteEffects.FlipHorizontally;
-                    origin = new Vector2(t.Width() - 2, t.Height() - 2);
+                    origin = new Vector2(scaledWidth - 2, scaledHeight - 2);
                 }
                 if (swingDir == -1)
                 {
@@ -197,7 +203,7 @@ namespace TerrariaCells.Common.ModPlayers
                         Lighting.GetColor(drawInfo.drawPlayer.itemLocation.ToTileCoordinates()),
                         drawInfo.drawPlayer.itemRotation + rotationAdd,
                         origin,
-                        drawInfo.drawPlayer.HeldItem.scale + player.itemScale - 1,
+                        weaponScale,
                         effects,
                         0
                     )
@@ -238,8 +244,8 @@ namespace TerrariaCells.Common.ModPlayers
                         null,
                         Lighting.GetColor(drawInfo.drawPlayer.itemLocation.ToTileCoordinates()),
                         drawInfo.drawPlayer.itemRotation,
-                        new Vector2(t.Width() / 2, t.Height() / 2),
-                        scale * drawInfo.heldItem.scale,
+                        new Vector2(scaledWidth / 2, scaledHeight / 2),
+                        scale * weaponScale,
                         effects,
                         0
                     )
@@ -264,8 +270,8 @@ namespace TerrariaCells.Common.ModPlayers
                         null,
                         Lighting.GetColor(position.ToTileCoordinates()),
                         rotation,
-                        new Vector2(t.Width() / 2, t.Height() / 2),
-                        drawInfo.heldItem.scale,
+                        new Vector2(scaledWidth / 2, scaledHeight / 2),
+                        weaponScale,
                         effects,
                         0
                     )
