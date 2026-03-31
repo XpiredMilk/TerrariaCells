@@ -1,4 +1,5 @@
 ﻿using Microsoft.Build.Execution;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Linq;
 using Terraria;
@@ -10,9 +11,11 @@ using Terraria.ModLoader;
 using Terraria.WorldBuilding;
 using TerrariaCells.Content.Buffs;
 using TerrariaCells.Content.Projectiles.HeldProjectiles;
+using TerrariaCells.Common.ModPlayers;
 
 using MonoMod.Cil;
 using Mono.Cecil.Cil;
+using Terraria.GameContent;
 
 namespace TerrariaCells.Common.GlobalProjectiles
 {
@@ -313,6 +316,22 @@ namespace TerrariaCells.Common.GlobalProjectiles
         {
             if (!projectile.DamageType.CountsAsClass(DamageClass.Melee))
                 projectile.knockBack = 0f;
+
+            else
+            {
+                // Scale projectile to be same size as melee weapon 
+                if (source is EntitySource_ItemUse sourceItem) // Check if source is an item
+                {
+                    Item weapon = sourceItem.Item;
+                    Player player = sourceItem.Player;
+
+                    float weaponScale = weapon.scale;
+                    CombinedHooks.ModifyItemScale(player, weapon, ref weaponScale);
+                    projectile.scale *= weaponScale;
+                    projectile.height = (int)(projectile.height * weaponScale);
+                    projectile.width = (int)(projectile.width * weaponScale);
+                }
+            }
 
             if (projectile.type == ProjectileID.Volcano && projectile.ai[1] != 1)
             {

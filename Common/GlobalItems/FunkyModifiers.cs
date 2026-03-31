@@ -82,6 +82,7 @@ public partial class FunkyModifierItemModifier : GlobalItem
     [
         FunkyModifier.Damage(1.15f),
         FunkyModifier.Damage(1.30f),
+        FunkyModifier.Size(1.20f),
         FunkyModifier.ProjectileVelocity(1.50f),
         FunkyModifier.AttackSpeed(1.15f),
         FunkyModifier.AttackSpeed(1.25f),
@@ -112,7 +113,7 @@ public partial class FunkyModifierItemModifier : GlobalItem
             FunkyModifierType.Damage => [ModCategory.Generic],
             FunkyModifierType.ProjectileVelocity => [ModCategory.Projectile],
             FunkyModifierType.AttackSpeed => [ModCategory.Generic],
-            FunkyModifierType.Size => [ModCategory.Sword, ModCategory.Projectile],
+            FunkyModifierType.Size => [ModCategory.Sword],
             FunkyModifierType.ManaCost => [ModCategory.Mana],
             FunkyModifierType.ImbuedDamage => [ModCategory.Mana],
             FunkyModifierType.FrenzyFire => [ModCategory.Generic],
