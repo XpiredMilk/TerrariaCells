@@ -85,6 +85,9 @@ namespace TerrariaCells.Common.GlobalItems
 			ModPlayers.AccessoryPlayer modPlayer = player.GetModPlayer<ModPlayers.AccessoryPlayer>();
 			switch (item.type)
 			{
+				case ItemID.AvengerEmblem:
+				player.GetDamage(DamageClass.Generic) += 0.15f;
+					break;
 				case ItemID.FastClock:
 					modPlayer.fastClock = true;
 					break;
@@ -104,7 +107,9 @@ namespace TerrariaCells.Common.GlobalItems
 				case ItemID.CelestialStone:
 					modPlayer.celestialStone = true;
 					break;
-
+				case ItemID.PygmyNecklace:
+					modPlayer.pygmyNecklace = true;
+					break;
 				case ItemID.FeralClaws:
 					player.GetAttackSpeed(DamageClass.Melee) += 0.4f;
 					break;

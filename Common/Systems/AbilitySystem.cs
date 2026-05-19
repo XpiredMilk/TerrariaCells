@@ -413,7 +413,6 @@ namespace TerrariaCells.Common.Systems
 			}
 		}
 
-
 		//Try to get the selected ability with 'Player.selectedItem'
 		public static bool TryGetSelectedAbility(Player player, out AbilitySlot ability)
 		{
@@ -525,7 +524,17 @@ namespace TerrariaCells.Common.Systems
 					break;
 				}
 			}
-			return null;
+
+			//Pygmy necklace effect
+			if (player.GetModPlayer<AccessoryPlayer>().pygmyNecklace && item.DamageType == DamageClass.Summon)
+			{
+				player.maxMinions = 4;
+				if (player.slotsMinions <= player.maxMinions)
+				{
+					Projectile.NewProjectileDirect(player.GetSource_FromThis(), player.Center, Vector2.Zero, item.shoot, item.damage, item.knockBack, Main.myPlayer);
+				}
+			}
+			return true;
 		}
 
 		public override void ModifyWeaponDamage(Item item, Player player, ref StatModifier damage)

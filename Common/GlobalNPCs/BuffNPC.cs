@@ -392,7 +392,7 @@ namespace TerrariaCells.Common.GlobalNPCs
 						break;
 					case BuffID.Venom:
 						npc.venom = true;
-						npc.lifeRegen -= Adjust(GeometricScale(buffStacks * 0.167f, 5.5f, 0.8125f));
+						npc.lifeRegen -= Adjust(GeometricScale(buffStacks * 0.25f, 12f, 0.8125f));
 						if (damage > 4)
 							damage = damage * 3 / 4; //Tick slightly more frequently
 						break;

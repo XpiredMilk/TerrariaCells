@@ -141,6 +141,7 @@ namespace TerrariaCells.Common.GlobalItems
                     break;
 
                 // MAGE
+                case ItemID.AmberStaff:
                 case ItemID.EmeraldStaff:
                 case ItemID.RubyStaff:
                     item.damage = 7;

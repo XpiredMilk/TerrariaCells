@@ -31,6 +31,7 @@ namespace TerrariaCells.Common.ModPlayers
         public bool celestialStone; //Reduce ability cooldowns by 0.5 sec on critical hit
         public bool philoStone; //+100% healing potion efficacy
         public bool heracles; //Abilities deal +50% damage
+        public bool pygmyNecklace; //Increases the number of summoned minions by 1 per minion type
 
         public override void OnHurt(Player.HurtInfo info)
         {
@@ -250,6 +251,7 @@ namespace TerrariaCells.Common.ModPlayers
             magicCuffs = false;
             philoStone = false;
             heracles = false;
+            pygmyNecklace = false;
         }
         public override void ModifyShootStats(Item item, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)
         {

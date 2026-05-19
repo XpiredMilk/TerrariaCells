@@ -113,6 +113,8 @@ namespace TerrariaCells.Content.WeaponAnimations
         {
             if (IsBroadsword(item))
             {
+                float weaponScale = 1f;
+                CombinedHooks.ModifyItemScale(player, item, ref weaponScale);
                 //if (player.itemTime != 0)
                 //{
                 //    return;
@@ -230,7 +232,7 @@ namespace TerrariaCells.Content.WeaponAnimations
                 //stab attack distance
                 if (mplayer.swingType == 2 && !HeavySwords.Contains(item.type))
                 {
-                    int distance = 8;
+                    int distance = (int)(8 * weaponScale);
                     float pinnacleTime = 0.6f;
 
                     //Main.NewText(player.itemAnimationMax * 0.6f);
@@ -295,11 +297,14 @@ namespace TerrariaCells.Content.WeaponAnimations
         {
             if (IsBroadsword(item))
             {
+                float weaponScale = 1f;
+                CombinedHooks.ModifyItemScale(player, item, ref weaponScale);
+
                 //Main.NewText("j");
                 WeaponPlayer mplayer = player.GetModPlayer<WeaponPlayer>();
                 //width of the sword sprite with correct scale
                 int itemWidth = (int)(
-                    TextureAssets.Item[item.type].Width() * (item.scale + mplayer.itemScale - 1)
+                    TextureAssets.Item[item.type].Width() * weaponScale
                 );
                 //make hitbox a square with the size of the weapon
                 hitbox = new Rectangle(0, 0, itemWidth, itemWidth);

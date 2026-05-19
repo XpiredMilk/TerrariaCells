@@ -8,6 +8,7 @@ namespace TerrariaCells.Common.Systems
     public class VanillaClearingSystem : ModSystem
 	{
         static readonly HashSet<int> AccessoriesToClear = [
+            ItemID.AvengerEmblem,
             ItemID.CelestialMagnet,
             ItemID.NaturesGift,
             ItemID.ArcaneFlower,
@@ -29,6 +30,7 @@ namespace TerrariaCells.Common.Systems
             ItemID.BandofRegeneration,
             ItemID.FastClock,
             ItemID.CelestialStone,
+            ItemID.PygmyNecklace,
         ];
         public override void Load()
 		{
