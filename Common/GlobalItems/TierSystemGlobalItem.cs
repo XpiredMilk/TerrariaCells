@@ -24,7 +24,7 @@ namespace TerrariaCells.Common.GlobalItems
 
         public override bool InstancePerEntity => true;
 
-        // Only apply item levels to weapons and the inferno potion
+        // Only apply item levels to weapons or the inferno potion
         public override bool AppliesToEntity(Item entity, bool lateInstantiation)
         {
             return (lateInstantiation && (entity.damage > 0 || entity.shoot != ProjectileID.None))
