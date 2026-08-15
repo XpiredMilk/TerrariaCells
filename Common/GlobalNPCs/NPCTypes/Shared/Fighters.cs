@@ -47,7 +47,8 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
                 || entity.type == NPCID.BloodCrawler
                 || entity.type == NPCID.BloodCrawlerWall
                 || entity.type == NPCID.DesertScorpionWalk
-                || entity.type == NPCID.DesertScorpionWall;
+                || entity.type == NPCID.DesertScorpionWall
+                || entity.type == NPCID.IceGolem;
         }
 
         public override void SetStaticDefaults()
@@ -107,6 +108,10 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
             {
                 return DrawBloodCrawler(npc, spriteBatch, screenPos, drawColor);
             }
+            if (npc.type == NPCID.IceGolem)
+            {
+                return DrawIceGolem(npc, spriteBatch, screenPos, drawColor);
+            }
             return base.PreDraw(npc, spriteBatch, screenPos, drawColor);
         }
 
@@ -127,6 +132,10 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
             if (npc.type == NPCID.BloodCrawler)
             {
                 BloodCrawlerFrame(npc);
+            }
+            if (npc.type == NPCID.IceGolem)
+            {
+                IceGolemFrame(npc);
             }
             base.FindFrame(npc, frameHeight);
         }
@@ -168,6 +177,10 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
                 if (npc.type == NPCID.BloodCrawler)
                 {
                     BloodCrawlerAI(npc, target);
+                }
+                if (npc.type == NPCID.IceGolem)
+                {
+                    IceGolemAI(npc, target);
                 }
                 if (ShouldWalk)
                     Walk(npc, WalkSpeed, Acceleration);
