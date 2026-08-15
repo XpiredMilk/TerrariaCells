@@ -1,4 +1,5 @@
 ﻿using Microsoft.Build.Execution;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Linq;
 using Terraria;
@@ -10,9 +11,11 @@ using Terraria.ModLoader;
 using Terraria.WorldBuilding;
 using TerrariaCells.Content.Buffs;
 using TerrariaCells.Content.Projectiles.HeldProjectiles;
+using TerrariaCells.Common.ModPlayers;
 
 using MonoMod.Cil;
 using Mono.Cecil.Cil;
+using Terraria.GameContent;
 
 namespace TerrariaCells.Common.GlobalProjectiles
 {
@@ -34,6 +37,11 @@ namespace TerrariaCells.Common.GlobalProjectiles
         public bool ForceCrit = false;
         public override bool InstancePerEntity => true;
 
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.RocketsSkipDamageForPlayers[ProjectileID.Grenade] = true;
+        }
+
         public override void SetDefaults(Projectile projectile)
 		{
 			switch (projectile.type)
@@ -45,6 +53,7 @@ namespace TerrariaCells.Common.GlobalProjectiles
 				case ProjectileID.PulseBolt:
 					projectile.penetrate = 3;
 					break;
+                case ProjectileID.AmberBolt:
 				case ProjectileID.RubyBolt:
 				case ProjectileID.EmeraldBolt:
 					projectile.penetrate = 1;
@@ -222,6 +231,13 @@ namespace TerrariaCells.Common.GlobalProjectiles
                         modifiers.CritDamage += 0.25f;
                     }
                     break;
+                case ProjectileID.DD2FlameBurstTowerT1Shot:
+                    if (target.HasBuff(BuffID.Oiled))
+                    {
+                        modifiers.SetCrit();
+                        Projectile.NewProjectileDirect(projectile.GetSource_OnHit(target), target.Center, Vector2.Zero, ProjectileID.Volcano, projectile.damage, modifiers.GetKnockback(projectile.knockBack), Main.myPlayer, ai1: 1);
+                    }
+                    break;
             }
 
 			if (projectile.TryGetGlobalProjectile(out SourceGlobalProjectile gProj) && gProj.itemSource != null)
@@ -275,6 +291,9 @@ namespace TerrariaCells.Common.GlobalProjectiles
 					GlobalNPCs.BuffNPC.AddBuff(target, BuffID.Bleeding, 60 * 3, damageDone);
                     //target.AddBuff(BuffID.Bleeding, 60 * 5);
                     break;
+                case ProjectileID.AmberBolt:
+                    GlobalNPCs.BuffNPC.AddBuff(target, BuffID.Oiled, 60 * 5, 0);
+                    break;
 				case ProjectileID.RubyBolt:
 					GlobalNPCs.BuffNPC.AddBuff(target, BuffID.OnFire, 60 * 5, damageDone);
 					break;
@@ -297,6 +316,22 @@ namespace TerrariaCells.Common.GlobalProjectiles
         {
             if (!projectile.DamageType.CountsAsClass(DamageClass.Melee))
                 projectile.knockBack = 0f;
+
+            else
+            {
+                // Scale projectile to be same size as melee weapon 
+                if (source is EntitySource_ItemUse sourceItem) // Check if source is an item
+                {
+                    Item weapon = sourceItem.Item;
+                    Player player = sourceItem.Player;
+
+                    float weaponScale = weapon.scale;
+                    CombinedHooks.ModifyItemScale(player, weapon, ref weaponScale);
+                    projectile.scale *= weaponScale;
+                    projectile.height = (int)(projectile.height * weaponScale);
+                    projectile.width = (int)(projectile.width * weaponScale);
+                }
+            }
 
             if (projectile.type == ProjectileID.Volcano && projectile.ai[1] != 1)
             {

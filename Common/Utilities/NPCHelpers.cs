@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria;
+using Terraria.ID;
 
 namespace TerrariaCells.Common.Utilities
 {
@@ -112,6 +113,24 @@ namespace TerrariaCells.Common.Utilities
 			if (allowDamageTrigger && npc.life < npc.lifeMax)
 				return true;
 			return npc.DistanceSQ(target.position) < MathF.Pow(range, 2);
+		}
+
+		public static void DoAttackWarning(this NPC npc)
+		{
+			for(int i = 0; i < Main.rand.Next(9, 13); i++)
+			{
+				Vector2 speed = Main.rand.NextVector2Square(-4f, 4f);
+				Dust dust = Dust.NewDustDirect(npc.Center, 1, 1, Terraria.ID.DustID.GiantCursedSkullBolt);
+				dust.noGravity = true;
+				dust.velocity = speed;
+				dust.scale = Main.rand.NextFloat(1f, 1.2f);
+			}
+			CombatText.NewText(npc.getRect() with { Y = (int)npc.position.Y + npc.height }, Color.Crimson, "!!", true);
+		}
+
+		public static bool CanBeUsedForHitEffects(this NPC self)
+		{
+			return self.active && !self.friendly && self.lifeMax > 5 && !self.dontTakeDamage && !self.immortal && !NPCID.Sets.ProjectileNPC[self.type];
 		}
 	}
 }

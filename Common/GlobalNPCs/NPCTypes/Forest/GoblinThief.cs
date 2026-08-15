@@ -167,6 +167,7 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Forest
                 if (distance.Y < 32)
                 {
                     npc.ai[1] = Stab;
+                    npc.DoAttackWarning();
                 }
                 else
                 {

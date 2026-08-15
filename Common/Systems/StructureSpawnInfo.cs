@@ -116,6 +116,10 @@ public class StructureSpawnInfo
             {
                 SetID = modNPC.Type;
             }
+            else
+            {
+                SetID = NPCID.FairyCritterGreen;
+            }
             return SetID;
         }
         if (IdPool != null)

@@ -109,6 +109,8 @@ namespace TerrariaCells.Content.NPCs
                     Vector2 end = target.Center - offset;
 
                     int timer = (int)Timer - 90;
+                    if(timer == 0)
+                        NPC.DoAttackWarning();
                     if (timer < 20)
                     {
                         NPC.velocity.X = MathHelper.Lerp(4.5f * NPC.ai[1], 0, timer / 15f);

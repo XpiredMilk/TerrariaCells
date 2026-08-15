@@ -67,6 +67,7 @@ namespace TerrariaCells.Content.MusicBoxes {
             "Dungeon",
             "Factory",
             "Forest",
+            "Crimson",
         ];
         public override string Name => base.Name + tracks[track];
         public override void SetStaticDefaults() {
@@ -105,6 +106,7 @@ namespace TerrariaCells.Content.MusicBoxes {
                 add(6), // Dungeon (Aeolian - Necrosis)
                 add(7), // Factory (Aeolian - Apathy)
                 add(8), // Forest (NACHOZ)
+                add(9), // Crimson (Aeolian - Sarcoma)
             ];
         }
     }

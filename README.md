@@ -1,7 +1,7 @@
-# TerraCells
-### A Dead Cells inspired Terraria mod
-Currently in alpha build stage.
+The initial public release build for TerraCells! This is a dead cells inspired roguelike mod for Terraria, where you travel through levels collecting weapons, skills, armor, and accessories to defeat enemies and bosses. Speak to the guide NPC for a tutorial. 
+As of now, the mod is unfinished, and upon reaching an exit that leads to a level that is not implemented, you will have the option to end your run. Note that there may be other exits that do lead to levels that exist. If a level leads to the Underworld, that is the furthest content that exists in the current build, and you can feel confident ending your run. 
 
-At the moment, we do not have any information to share about this mod widely. 
-If you're finding this repository randomly and are curious, 
-you can DM @sorbetcafe on Discord.
+To begin playing, put this file in the "Mods" folder in your tmodloader folder. This can be found in Documents\My Games\Terraria\tModLoader\Mods. Then, launch tmodloader and enable the mod. Structure helper is a dependency. It does not have compatibility with any other mods and you should not have any other mods enabled. 
+Create a new classic character AFTER enabling the mod, then select "New World." TerraCells overrides vanilla worldgen and will generate a world. These worlds will be different between runs, and the world will be deleted when you die. Start the world to begin playing!
+
+Multiplayer is supported! Player 1 needs to create and enter a world. Player 2 can join their game. Any dead players will respawn between levels. Joining after the beginning of the game will cause you to be treated as dead until the end of the current level. See the TerraCells channel in my discord server https://discord.gg/H5sda8nc for discussion, bug reports, and help. 

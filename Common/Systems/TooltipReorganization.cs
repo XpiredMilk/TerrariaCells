@@ -1,219 +1,150 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
-using TerrariaCells.Common.GlobalItems;
-
+using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.Collections.Frozen;
 namespace TerrariaCells.Common.Systems;
 
-public class TooltipReorganization : ModSystem
+public static class TooltipReorganization
 {
-    public List<string> tooltipOrganization =
-    [ // this is initialized with the default list, do NOT modify the list here! modify the list in Load()
-        "ItemName",
-        "Favorite",
-        "FavoriteDesc",
-        "NoTransfer",
-        "Social",
-        "SocialDesc",
-        "Damage",
-        "CritChance",
-        "Speed",
-        "NoSpeedScaling",
-        "SpecialSpeedScaling",
-        "Knockback",
-        "FishingPower",
-        "NeedsBait",
-        "BaitPower",
-        "Equipable",
+    internal static readonly List<string> _tooltips = new List<string>
+    {
+        "ItemName", "Favorite", "FavoriteDesc", //Exist on all items
+        "NoTransfer", //UNUSED
+        "Social", "SocialDesc", //Social
+        "Damage", "CritChance", "Speed", "NoSpeedScaling", "SpecialSpeedScaling", "Knockback", //Weapons
+        "FishingPower", "NeedsBait", "BaitPower", //Fishing
+        "Equipable", //Equips
         "WandConsumes",
-        "Quest",
-        "Vanity",
-        "Defense",
-        "PickPower",
-        "AxePower",
-        "HammerPower",
-        "TileBoost",
-        "HealLife",
-        "HealMana",
-        "UseMana",
+        "Quest", //Fishing (2)
+        "Vanity", "Defense", //Equips (2)
+        "PickPower", "AxePower", "HammerPower", "TileBoost", //Tools
+        "HealLife", "HealMana", "UseMana", //Resource
         "Placeable",
-        "Ammo",
-        "Consumable",
-        "Material",
-        "Tooltip#",
-        "EtherianManaWarning",
-        "WellFedExpert",
-        "BuffTime",
+        "Ammo", "Consumable", "Material", //Use
+        "Tooltip",
+        "EtherianManaWarning", //Resource (2)
+        "WellFedExpert", "BuffTime", //Buffs
         "OneDropLogo",
-        "PrefixDamage",
-        "PrefixSpeed",
-        "PrefixCritChance",
-        "PrefixUseMana",
-        "PrefixSize",
-        "PrefixShootSpeed",
-        "PrefixKnockback",
-        "PrefixAccDefense",
-        "PrefixAccMaxMana",
-        "PrefixAccCritChance",
-        "PrefixAccDamage",
-        "PrefixAccMoveSpeed",
-        "PrefixAccMeleeSpeed",
-        "SetBonus",
-        "Expert",
-        "Master",
-        "JourneyResearch",
+        "PrefixDamage", "PrefixSpeed", "PrefixCritChance", "PrefixUseMana", "PrefixSize", "PrefixShootSpeed", "PrefixKnockback", "PrefixAccDefense", "PrefixAccMaxMana", "PrefixAccCritChance", "PrefixAccDamage", "PrefixAccMoveSpeed", "PrefixAccMeleeSpeed", //Modifiers
+        "SetBonus", //Equips (3)
+        "Expert", "Master", "JourneyResearch", //Difficulty
         "ModifiedByMods",
         "BestiaryNotes",
-        "SpecialPrice",
-        "Price",
-    ];
+        "SpecialPrice", "Price", //Price
+    };
+
+    ///<inheritdoc cref="Terraria.ModLoader.TooltipLine.TooltipLine(Mod, string, string)"/>
+    public static IEnumerable<string> Tooltips => _tooltips;
 
     /// <summary>
-    /// Tooltips created outside of this system that will still be allowed to be shown.
+    /// Use to load tooltips where order is important
     /// </summary>
-    internal List<string> tooltipWhitelist =
-    [
-        "ItemName",
-        "Damage",
-        // "CritChance",
-        // "Speed",
-        // "NoSpeedScaling",
-        // "SpecialSpeedScaling",
-        // "Knockback",
-        // "Equipable",
-        "Defense",
-        "HealLife",
-        "HealMana",
-        "UseMana",
-        "Consumable",
-        // "Material", // maybe add ??
-        "BuffTime",
-        "SpecialPrice",
-        "Price",
-    ];
-
-    public override void Load()
+    /// <param name="tooltipName"></param>
+    /// <param name="afterAnchor"></param>
+    /// <returns></returns>
+    /// <remarks></remarks>
+    public static bool LoadTooltip(string tooltipName, string afterAnchor)
     {
-        RegisterTooltip("ItemCategorization", "ItemName");
-		RegisterTooltip("SkillTitle", "Damage");
-		RegisterTooltip("SkillCooldown", "Damage");
-		RegisterTooltip("SkillDuration", "Damage");
-		RegisterTooltip("ShiftHint", "Damage");
-		RegisterTooltip("Tooltip0", "Material");
-        RegisterTooltip("Tooltip1", "Tooltip0");
-        RegisterTooltip("Tooltip2", "Tooltip1");
-        RegisterTooltip("FunkyModifier0", "OneDropLogo");
-        RegisterTooltip("FunkyModifier1", "FunkyModifier0");
-        RegisterTooltip("FunkyModifier2", "FunkyModifier1");
-        RegisterTooltip("FunkyModifier3", "FunkyModifier2");
-        RegisterTooltip("FunkyModifier4", "FunkyModifier3");
-        RegisterTooltip("FunkyModifier5", "FunkyModifier4");
+        if (_tooltips.Contains(tooltipName)) return false;
+        int index = _tooltips.FindIndex(ttL => ttL.Equals(afterAnchor));
+        if (index != -1)
+        {
+            _tooltips.Insert(++index, tooltipName);
+            return true;
+        }
+        _tooltips.Add(tooltipName);
+        return true;
     }
 
-    /// <summary>
-    /// Adds a tooltip to the registration so that other tooltips can use it as an anchor point.
-    ///
-    /// The tooltip will be inserted into the registration right after the anchor if found.
-    /// If nothing is found for anchor, an exception will be thrown.
-    /// </summary>
-    /// <param name="name"></param>
-    /// <param name="anchor"></param>
-    public void RegisterTooltip(string name, string anchor = "Damage")
+    public static int IndexTooltip(this List<TooltipLine> tooltips, string afterAnchor)
     {
-        // this all is reliant on the fact that the ItemName tooltip exists for every item.
-        // if an exception is found, this system may need to be reworked to accomodate for that edge case.
-        int index = tooltipOrganization.FindIndex(x => x == anchor);
+        //Special case for Tooltip# because there can be as many of those as you'd like
+        bool isTooltip_num = afterAnchor.StartsWith("Tooltip");
+
+        //Check if anchor tooltip already exists. No reason to iterate '_tooltips' if it does
+        int index = isTooltip_num ?
+        tooltips.FindLastIndex(ttL => ttL.Name.StartsWith("Tooltip")) :
+        tooltips.FindIndex(ttL => ttL.Name.Equals(afterAnchor));
+
+        if (index != -1)
+            return ++index;
+
+        index = _tooltips.IndexOf(afterAnchor)-1;
+
+        //Stardust - This could be a loop, but it'd just be repeating the logic again anyway
+        if (index > -1)
+            return tooltips.IndexTooltip(_tooltips[index]);
+
+        ModContent.GetInstance<TerrariaCells>().Logger.Warn($"Anchor tooltip ('{nameof(afterAnchor)}'=\"{afterAnchor}\") was not found. Could not find valid tooltip insert location.");
+        return tooltips.Count;
+    }
+
+    public static void InsertTooltip(this List<TooltipLine> tooltips, TooltipLine tooltip)
+    {
+        int index = _tooltips.IndexOf(tooltip.Name);
         if (index == -1)
         {
-            // this could potentially get replaced by just inserted the item to the beginning of the list
-            // which would have the added benefit of actively passing in null to put the registration in front.
-            throw new Exception("Could not find the anchor " + anchor);
-        }
-
-        tooltipOrganization.Insert(index + 1, name);
-    }
-
-    public void InsertTooltip(TooltipLine tooltip, List<TooltipLine> tooltips)
-    {
-        // multiple linear time complexity operations may not be great,
-        // but it's more optimal for ensuring that the list doesn't need to be constantly resorted.
-
-        // actually its almost kind of n^2 time complexity? it runs tooltips.len * tooltipOrganization.len worst case
-        int anchor = tooltipOrganization.FindIndex(x => x == tooltip.Name);
-        while (anchor > -1)
-        {
-            int index = tooltips.FindIndex(x => x.Name == tooltipOrganization[anchor]);
-            if (index == -1)
-            {
-                anchor -= 1;
-                continue;
-            }
-            tooltips.Insert(index, tooltip);
+            tooltips.Add(tooltip);
             return;
         }
-        tooltips.Add(tooltip);
+        if (index > 0)
+            index--;
+        tooltips.InsertTooltip(tooltip, _tooltips[index]);
     }
-}
 
-public class TooltipManager : GlobalItem
-{
-    public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
+    public static void InsertTooltip(this List<TooltipLine> tooltips, TooltipLine tooltip, string afterAnchor)
     {
-        TooltipReorganization reorganization = Mod.GetContent<TooltipReorganization>().First();
+        tooltips.Insert(tooltips.IndexTooltip(afterAnchor), tooltip);
+    }
 
-        foreach (TooltipLine oldTooltip in tooltips)
+    public static void ReplaceTooltip(this List<TooltipLine> tooltips, TooltipLine tooltip, string tooltipName)
+    {
+        if (_Global_Unaffected_Tooltips.Contains(tooltipName)) return;
+
+        //Special case for Tooltip#
+        bool isTooltip_num = tooltipName.StartsWith("Tooltip");
+
+        int replaceIndex = tooltips.FindIndex(ttL => ttL.Mod.Equals("Terraria") && ttL.Visible && (ttL.Name.Equals(tooltipName) || (isTooltip_num && ttL.Name.StartsWith("Tooltip"))));
+        if (replaceIndex != -1)
         {
-            if (!reorganization.tooltipWhitelist.Contains(oldTooltip.Name))
+            tooltips[replaceIndex] = tooltip;
+
+            if (isTooltip_num)
             {
-                oldTooltip.Hide();
+                foreach (TooltipLine ttL in tooltips)
+                    if (ttL.Mod.Equals("Terraria") && ttL.Name.StartsWith("Tooltip"))
+                        ttL.Hide();
             }
         }
-        foreach (
-            TooltipLine tooltip in Mod.GetContent<FunkyModifierItemModifier>()
-                .First()
-                .GetTooltips(item)
-        )
+        else
         {
-            reorganization.InsertTooltip(tooltip, tooltips);
+            tooltips.InsertTooltip(tooltip, tooltipName);
         }
-        foreach (
-            TooltipLine tooltip in Mod.GetContent<VanillaReworksGlobalItem>()
-                .First()
-                .GetTooltips(item)
-        )
-        {
-            reorganization.InsertTooltip(tooltip, tooltips);
-        }
-        foreach (
-            TooltipLine tooltip in Mod.GetContent<AccessoryEffects>().First().GetTooltips(item)
-        )
-        {
-            reorganization.InsertTooltip(tooltip, tooltips);
-        }
-        foreach (
-            TooltipLine tooltip in Mod.GetContent<ArmorEffects>().First().GetTooltips(item)
-        )
-        {
-            reorganization.InsertTooltip(tooltip, tooltips);
-        }
-		//foreach (
-		//    TooltipLine tooltip in Mod.GetContent<AbilityEdits>().First().GetTooltips(item)
-		//)
-		//{
-		//    reorganization.InsertTooltip(tooltip, tooltips);
-		//}
-		if (AbilityEdits.TryGetWithFormat(Mod, item, out IEnumerable<TooltipLine> lines))
-		{
-			foreach (TooltipLine line in lines)
-				reorganization.InsertTooltip(line, tooltips);
-		}
+    }
 
-        tooltips.Sort(
-            comparison: (x, y) =>
-                reorganization.tooltipOrganization.FindIndex(a => a == x.Name)
-                - reorganization.tooltipOrganization.FindIndex(a => a == y.Name)
-        );
+    /// <summary> Set of tooltips by name that <b>should not</b> be hidden or filtered out </summary>
+    internal static readonly FrozenSet<string> _Global_Unaffected_Tooltips = new HashSet<string>()
+    {
+        "ItemName", "SetBonus", "ModifiedByMods", "SpecialPrice", "Price"
+    }.ToFrozenSet();
+    /// <summary>
+    /// Filters by VANILLA tooltips (modded tooltips assumed to be deliberate)
+    /// </summary>
+    /// <param name="tooltips"></param>
+    /// <param name="tooltipNames"></param>
+    /// <param name="asBlacklist"></param>
+    public static void FilterTooltips(this List<TooltipLine> tooltips, string[] tooltipNames, bool asBlacklist = false)
+    {
+        foreach (TooltipLine tooltip in tooltips.Where(ttL => ttL.Mod.Equals("Terraria")))
+        {
+            bool isTooltip_num = tooltip.Name.StartsWith("Tooltip");
+            if (_Global_Unaffected_Tooltips.Contains(tooltip.Name) || (isTooltip_num && _Global_Unaffected_Tooltips.Contains("Tooltip"))) continue;
+            bool isInList = tooltipNames.Contains(tooltip.Name) || (isTooltip_num && tooltipNames.Any(s => s.StartsWith("Tooltip")));
+            if (!isInList ^ asBlacklist)
+                tooltip.Hide();
+        }
     }
 }

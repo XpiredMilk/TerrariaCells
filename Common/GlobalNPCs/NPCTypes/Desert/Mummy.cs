@@ -100,6 +100,10 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
 				npc.direction = npc.oldDirection;
                 ShouldWalk = false;
                 npc.velocity.X *= 0.9f;
+                if((int)npc.ai[2] == 45)
+                {
+                    npc.DoAttackWarning();
+                }
                 if (npc.ai[2] == 70)
                 {
                     Projectile.NewProjectile(npc.GetSource_FromAI(), npc.Center + new Vector2(40 * npc.direction, 0), Vector2.Zero, ModContent.ProjectileType<MummyShockwave>(), TCellsUtils.ScaledHostileDamage(npc.damage), 1, -1, npc.direction);

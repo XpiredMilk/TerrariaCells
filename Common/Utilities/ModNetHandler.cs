@@ -27,6 +27,7 @@ namespace TerrariaCells.Common.Utilities
                 [TCPacketType.BuffPacket] = new BuffPacketHandler(),
                 [TCPacketType.TrackerPacket] = new TrackerPacketHandler(),
                 [TCPacketType.HeartPacket] = new HeartPacketHandler(),
+                [TCPacketType.RunDataPacket] = new RunDataPacketHandler(),
             };
         }
         internal static Dictionary<TCPacketType, PacketHandler> Handlers;
@@ -45,8 +46,8 @@ namespace TerrariaCells.Common.Utilities
             }
             finally
             {
-                if(reader.BaseStream.Position != reader.BaseStream.Length)
-                    mod.Logger.Warn($"Invalid packet reading for Packet Type: {type}");
+                //if(reader.BaseStream.Position != reader.BaseStream.Length)
+                    //mod.Logger.Warn($"Invalid packet reading for Packet Type: {type}");
             }
         }
         internal static ModPacket GetPacket(Mod mod, TCPacketType type, ushort len = 256)
@@ -99,6 +100,15 @@ namespace TerrariaCells.Common.Utilities
         /// See <see cref="HeartPacketHandler.HeartPacketType"/> for more details
         /// </summary>
         HeartPacket,
+        /// <summary>
+        /// Server sends run data to client, for display (sent on detected end-of-run teleport)
+        /// </summary>
+        /// <remarks>
+        /// <b>Send/Receive:</b>
+        /// <para><i>To Client:</i> <c> <see langword="byte"/> length, ( <see langword="string"/> path, <see langword="long"/> time )[]</c> </para>
+        /// <para><i>To Server:</i> <b>N/A</b> </para>
+        /// </remarks>
+        RunDataPacket
     }
 
     //Template XML docs for specific message types:

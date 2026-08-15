@@ -10,6 +10,7 @@ using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.WorldBuilding;
 using TerrariaCells.Common.GlobalItems;
+using TerrariaCells.Common.Utilities;
 using TerrariaCells.Content.Buffs;
 using TerrariaCells.Content.Projectiles;
 using TerrariaCells.Content.WeaponAnimations;
@@ -49,6 +50,10 @@ namespace TerrariaCells.Common.ModPlayers
         public bool moltenGreaves; //Leave a trail of flames that ignites enemies (hellfire treads, but functional) <- WORKS
         float distanceUntilFlameSpawn = 0;
 
+        public int goldArmorCount;
+        public bool goldChestplate;
+        public bool GoldSetBonus => goldArmorCount == 3;
+
         public override void ResetEffects()
         {
             ninjaHood = false;
@@ -63,6 +68,16 @@ namespace TerrariaCells.Common.ModPlayers
             moltenHelmet = false;
             moltenBreastplate = false;
             moltenGreaves = false;
+            goldArmorCount = 0;
+            goldChestplate = false;
+        }
+
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
+        {
+            if(goldChestplate)
+            {
+                target.AddBuff(BuffID.Midas, 60*10);
+            }
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -74,6 +89,30 @@ namespace TerrariaCells.Common.ModPlayers
                 Player.AddBuff(ModContent.BuffType<ShadowDodgeBuff>(), 1200);
                 //isShadowDodgeActive = true;
                 ticksUntilShadowDodgeAvailable = 1800;
+            }
+            
+            if(Main.netMode != 2 && Player.whoAmI == Main.myPlayer)
+            {
+                if(target.CanBeUsedForHitEffects() && !NPCID.Sets.NeverDropsResourcePickups[target.type] && GoldSetBonus)
+                {
+                    int amountToDrop = Main.rand.Next(50, 3_00);
+                    int copper = amountToDrop % 100;
+                    int silver = (amountToDrop / 100) % 100;
+                    int gold = (amountToDrop / 10000) % 100;
+                    int platinum = (amountToDrop / 1000000) % 100;
+                    int[] coinAmounts = [ copper, silver, gold, platinum];
+                    for(int i = 0; i < 4; i++)
+                    {
+                        int type = ItemID.CopperCoin + i;
+                        if(coinAmounts[i] > 0)
+                        {
+                            int whoAmI = Item.NewItem(Player.GetSource_OnHit(target), target.Center, Vector2.Zero, type, coinAmounts[i], noBroadcast: true, noGrabDelay: true);
+                            Main.item[whoAmI].TryCombiningIntoNearbyItems(whoAmI);
+                            if(Main.netMode == 1)
+                                NetMessage.SendData(MessageID.SyncItem, -1, -1, null, whoAmI, true.ToInt());
+                        }
+                    }
+                }
             }
         }
 
@@ -206,6 +245,36 @@ namespace TerrariaCells.Common.ModPlayers
                     distanceUntilFlameSpawn += Math.Min(8f, horizontalSpeed * 4f);
                     Projectile projectile = Projectile.NewProjectileDirect(Player.GetSource_FromThis(), Player.Center + new Vector2(0f, 16f), Vector2.Zero, ModContent.ProjectileType<TrailOfFlames>(), 1, 0);
                     ((TrailOfFlames)projectile.ModProjectile).scaleFactor = Math.Min(0.8f, (0.75f + Main.rand.NextFloat() * 0.5f) * 0.65f * Math.Abs(horizontalSpeed / Player.maxRunSpeed));
+                }
+
+                // if (GoldSetBonus)
+                // {
+                //     Player.setBonus = "1% increased damage for every Gold Coin you have\n100% increased damage for every Platinum Coin you have";
+                // }
+            }
+        }
+
+        public override void PostUpdateEquips()
+        {
+            // if (moltenArmorSet)
+            //     Player.setBonus = "Your Fire effects are replaced with Hellfire";
+            // if (jungleArmorSet)
+            //     Player.setBonus = "Killing an enemy makes your spells free for a short period";
+            // if (necroArmorSet)
+            //     Player.setBonus = "Bows charge twice as fast\nGuns reload twice as fast";
+            // if (ninjaArmorSet)
+            //     Player.setBonus = "Become immune after striking an enemy";
+
+            if(!string.IsNullOrEmpty(Player.setBonus))
+            {
+                Item helm = Player.armor[0];
+                if (ItemID.Search.TryGetName(helm.type, out string internalName))
+                {
+                    string key = Mod.GetLocalizationKey($"Tooltips.Items.{internalName}.SetBonus");
+                    if(Language.Exists(key))
+                    {
+                        Player.setBonus = Language.GetTextValue(key);
+                    }
                 }
             }
         }

@@ -11,12 +11,13 @@ using Terraria.ModLoader.IO;
 
 using TerrariaCells.Common.Configs;
 using TerrariaCells.Common.GlobalItems;
+using TerrariaCells.Common.ModPlayers;
 
 namespace TerrariaCells.Common.Systems;
 
 public class ChestLootSpawner : ModSystem, IEntitySource
 {
-    public Dictionary<string, int[]> ChestLootTables;
+    //public Dictionary<string, int[]> ChestLootTables;
 
     public List<int> lootedChests = [];
 
@@ -24,11 +25,6 @@ public class ChestLootSpawner : ModSystem, IEntitySource
 
     public override void Load()
     {
-        using Stream stream = Mod.GetFileStream("chest loot tables.json");
-        var buf = new byte[stream.Length];
-        stream.Read(buf);
-        ChestLootTables = JsonSerializer.Deserialize<Dictionary<string, int[]>>(buf);
-
         ///See <see cref="ModPlayers.RewardPlayer."/>
         On_Player.OpenChest += OnChestOpen;
     }
@@ -45,10 +41,19 @@ public class ChestLootSpawner : ModSystem, IEntitySource
 
     public void Reset()
     {
-        if (DevConfig.Instance.EnableChestChanges)
+        if(lootedChests is null)
+        {
+            lootedChests = new List<int>();
+        }
+        if(lootedChests.Count == 0)
+        {
+            return;
+        }
+        if (DevConfig.Instance?.EnableChestChanges == true && Main.chest is not null)
         {
             foreach (int chest in lootedChests)
             {
+                if(Main.chest[chest] is null) continue;
                 Main.chest[chest].frame = 0;
                 Main.chest[chest].frameCounter = 0;
             }
@@ -70,7 +75,7 @@ public class ChestLootSpawner : ModSystem, IEntitySource
         }
     }
     // MULTIPLAYER ONLY
-    public void OpenChest(int x, int y, int newChest)
+    public void OpenChest(int x, int y, int newChest, int fromWho)
     {
         bool isNewChest = !lootedChests.Contains(newChest);
 
@@ -94,8 +99,9 @@ public class ChestLootSpawner : ModSystem, IEntitySource
         {
             if (isNewChest)
             {
-                if (ChestLootTables.TryGetValue(tileFrame, out int[] loot_ids)) 
+                if (ItemsJson.Instance.ChestOverrides.TryGetValue(tileFrame, out var func))
                 {
+                    int[] loot_ids = Main.player[fromWho].GetModPlayer<MetaPlayer>().GetDropOptions(func.Invoke()).ToArray();
                     if (loot_ids.Length > 0)
                     {
                         int i = Item.NewItem(
@@ -103,7 +109,7 @@ public class ChestLootSpawner : ModSystem, IEntitySource
                             new Point16(x, y).ToWorldCoordinates(),
                             0,
                             0,
-                            loot_ids[Main.rand.Next(loot_ids.Length)]
+                            Main.rand.Next(loot_ids)
                         );
                         Item item = Main.item[i];
 
@@ -162,8 +168,9 @@ public class ChestLootSpawner : ModSystem, IEntitySource
 
             if (isNewChest)
             {
-                if (ChestLootTables.TryGetValue(tileFrame, out int[] loot_ids)) 
+                if (ItemsJson.Instance.ChestOverrides.TryGetValue(tileFrame, out var func))
                 {
+                    int[] loot_ids = self.GetModPlayer<MetaPlayer>().GetDropOptions(func.Invoke()).ToArray();
                     if (loot_ids.Length > 0)
                     {
                         Item item = Main.item[
@@ -172,7 +179,7 @@ public class ChestLootSpawner : ModSystem, IEntitySource
                             new Point16(x, y).ToWorldCoordinates(),
                             0,
                             0,
-                            loot_ids[Main.rand.Next(loot_ids.Length)]
+                            Main.rand.Next(loot_ids)
                             )
                         ];
 

@@ -88,11 +88,12 @@ public class BasicWorldGeneration : ModSystem
             {
                 if (Mod.SourceFolder != "")
                 {
-                    string path = Mod.SourceFolder + "\\" + structure.SpawnInfoPath;
+                    string path = Mod.SourceFolder + "/" + structure.SpawnInfoPath;
+                    path = ReLogic.Content.AssetPathHelper.CleanPath(path);
 
                     if (!File.Exists(path))
                     {
-                        byte[] buf = Encoding.UTF8.GetBytes(['[', ']']);
+                        byte[] buf = Encoding.UTF8.GetBytes((char[])['[', ']']);
                         using (FileStream f = File.Create(path))
                         {
                             f.Write(buf);

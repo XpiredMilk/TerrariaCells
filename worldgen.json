@@ -137,6 +137,21 @@
             "Surface": false
         },
         {
+            "Name": "Factory",
+            "Structures": [
+                {
+                    "Name": "factory_1",
+                    "Path": "Content/Structures/factory_1.shstruct",
+                    "OffsetX": 0,
+                    "OffsetY": 300,
+                    "SpawnX": 216,
+                    "SpawnY": 194,
+                    "SpawnInfoPath": "Content/SpawnInfo/factory_1.json"
+                }
+            ],
+            "Surface": false
+        },
+        {
             "Name": "Hive",
             "Structures": [
                 {

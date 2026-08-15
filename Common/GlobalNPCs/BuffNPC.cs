@@ -62,14 +62,16 @@ namespace TerrariaCells.Common.GlobalNPCs
             {
                 //int oldType = type;
                 type = Main.player[self.lastInteraction].GetModPlayer<BuffPlayer>().GetBuffToApply(type, ref time, ref stacksToAdd);
-                //ModContent.GetInstance<TerrariaCells>().Logger.Info($"(BUFF) Replaced {oldType} with {type}");
-            }
+				Main.player[self.lastInteraction].GetModPlayer<Common.Systems.RunDataPlayer>().AppliedDebuff(stacksToAdd);
+				//ModContent.GetInstance<TerrariaCells>().Logger.Info($"(BUFF) Replaced {oldType} with {type}");
+			}
             else if(Main.netMode != 2)
             {
                 //int oldType = type;
                 type = Main.LocalPlayer.GetModPlayer<BuffPlayer>().GetBuffToApply(type, ref time, ref stacksToAdd);
-                //ModContent.GetInstance<TerrariaCells>().Logger.Info($"(BUFF) Replaced {oldType} with {type}");
-            }
+				Main.LocalPlayer.GetModPlayer<Common.Systems.RunDataPlayer>().AppliedDebuff(stacksToAdd);
+				//ModContent.GetInstance<TerrariaCells>().Logger.Info($"(BUFF) Replaced {oldType} with {type}");
+			}
 			orig.Invoke(self, type, time, quiet);
 
 			int buffIndex = self.FindBuffIndex(type);
@@ -390,7 +392,7 @@ namespace TerrariaCells.Common.GlobalNPCs
 						break;
 					case BuffID.Venom:
 						npc.venom = true;
-						npc.lifeRegen -= Adjust(GeometricScale(buffStacks * 0.167f, 5.5f, 0.8125f));
+						npc.lifeRegen -= Adjust(GeometricScale(buffStacks * 0.25f, 12f, 0.8125f));
 						if (damage > 4)
 							damage = damage * 3 / 4; //Tick slightly more frequently
 						break;

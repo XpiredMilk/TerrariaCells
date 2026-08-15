@@ -40,7 +40,7 @@ public class TeleportTracker : ModSystem
     public override void ClearWorld()
     {
         SetDefaults();
-        Update_SetWorldConditions("Inn");
+        //Update_SetWorldConditions("Inn");
         deferredTimeSet = true;
         /*Mod.Logger.Info($"b4: {Main.time};{Main.dayTime}");
         Main.dayTime = false;
@@ -61,7 +61,7 @@ public class TeleportTracker : ModSystem
 
     public bool CanTeleport(string nextLevel)
     {
-        return StaticFileAccess.Instance.WorldGenData.LevelPositions.TryGetValue(nextLevel, out _);
+        return StaticFileAccess.Instance.WorldGenData.LevelPositions?.TryGetValue(nextLevel, out _)??false;
     }
 
     public void Teleport(string destination)
@@ -89,6 +89,8 @@ public class TeleportTracker : ModSystem
         Update_SetVariables(destination); //Input: current location
         Point16 telePos = GetTelePos("Inn"); //Input: "going to" location
         Update_SetWorldConditions(destination); //Input: current location
+        ModContent.GetInstance<RunDataSystem>().FlushPath(destination);
+        Main.LocalPlayer.GetModPlayer<RunDataPlayer>().FlushPath(destination);
 
         Main.LocalPlayer.Teleport(telePos.ToWorldCoordinates(), TeleportationStyleID.Portal);
         DoTeleportNPCCheck("Inn", telePos.ToWorldCoordinates());
@@ -101,13 +103,13 @@ public class TeleportTracker : ModSystem
 
         if (worldLevelData == null)
         {
-            Main.NewText($"Teleport failed, worldgen information missing. (check client.log for more info)");
+            //Main.NewText($"Teleport failed, worldgen information missing. (check client.log for more info)");
             return;
         }
 
         if (!worldLevelData.LevelVariations.ContainsKey(destination))
         {
-            Main.NewText($"Could not go to {nextLevelVariation}, for the level does not yet exist.");
+            //Main.NewText($"Could not go to {nextLevelVariation}, for the level does not yet exist.");
             Mod.Logger.Error($"Tried to go to level {nextLevelVariation}, but it doesn't exist.");
             return;
         }
@@ -182,7 +184,7 @@ public class TeleportTracker : ModSystem
         Mod.Logger.Info($"	Variation: {nextLevelVariation}");
 
         if (!worldLevelData.LevelPositions.TryGetValue(nextLevel, out Point16 roomPos)) {
-            Main.NewText($"Could not go to {nextLevelVariation}, for the level does not yet exist.");
+            //Main.NewText($"Could not go to {nextLevelVariation}, for the level does not yet exist.");
             Mod.Logger.Error($"Tried to go to level {nextLevelVariation}, but it doesn't exist.");
             return;
         }
@@ -395,6 +397,16 @@ public class TeleportTracker : ModSystem
             }
             RewardTrackerSystem.UpdateTracker(RewardTrackerSystem.TrackerAction.Pause);
             RewardTrackerSystem.UpdateChests_OnTeleport(tileCoords);
+            
+            if(Main.netMode == 0)
+            {
+                Main.LocalPlayer.statMana += 9999;
+                ref var skillz = ref Main.LocalPlayer.GetModPlayer<AbilityHandler>().Abilities;
+                foreach (var ability in skillz)
+                {
+                    ability.cooldownTimer = 0;
+                }
+            }
         }
         else
         {

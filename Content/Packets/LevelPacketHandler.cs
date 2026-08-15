@@ -35,12 +35,32 @@ namespace TerrariaCells.Content.Packets
                 }
 
                 var tele = ModContent.GetInstance<TeleportTracker>();
-                if (!tele.CanTeleport(destination))
+
+                if (destination.Equals(Content.Tiles.LevelExitPylon.ForestExitPylon.END_RUN_PORTAL_TEXT) || !tele.CanTeleport(destination))
+                {
+                    var runData = ModContent.GetInstance<RunDataSystem>();
+
+                    ModPacket endPacket = ModNetHandler.GetPacket(mod, TCPacketType.RunDataPacket);
+                    endPacket.Write((ushort)runData._runSummary.Count);
+                    foreach(string name in runData._path)
+                    {
+                        endPacket.Write(name);
+                        endPacket.Write(runData._runSummary.TryGetValue(name, out var data) ? data.Time.Ticks : 0L);
+                    }
+                    //endPacket.Write(runData.CurrentRegion);
+                    //endPacket.Write(runData.CurrentRegionData.Time.Ticks);
+
+                    endPacket.Send();
+                    
+                    NetMessage.SendData(MessageID.WorldData);
                     return;
+                }
 
                 tele.Update_SetVariables(destination);
                 Terraria.DataStructures.Point16 tpTile = tele.GetTelePos(tele.GetActualDestination(destination));
                 tele.Update_SetWorldConditions(destination);
+                if(!destination.ToLower().Equals("inn"))
+                    ModContent.GetInstance<RunDataSystem>().FlushPath(destination);
 
 
                 ModPacket packet = ModNetHandler.GetPacket(mod, TCPacketType.LevelPacket);
@@ -88,6 +108,12 @@ namespace TerrariaCells.Content.Packets
                     //Main.LocalPlayer.respawnTimer = 0;
                     Main.LocalPlayer.Spawn(PlayerSpawnContext.ReviveFromDeath);
                     Main.LocalPlayer.ghost = false;
+                }
+                
+                Main.LocalPlayer.statMana+=9999;
+                foreach(var sk1l in Main.LocalPlayer.GetModPlayer<AbilityHandler>().Abilities)
+                {
+                    sk1l.cooldownTimer = 0;
                 }
             }
         }

@@ -237,6 +237,9 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Forest
 
                 if (time > 50)
                 {
+                    if(time < 52)
+                        npc.DoAttackWarning();
+                        
                     for (int i = 0; i < 4; i++)
                     {
                         Dust d = Dust.NewDustDirect(npc.Center + new Vector2(0, -4), 4, 4, Terraria.ID.DustID.Torch);

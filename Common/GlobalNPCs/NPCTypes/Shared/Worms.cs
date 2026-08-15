@@ -888,7 +888,7 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
                     {
                         if (safetyGuardMaxLoopCount-- < 0)
                         {
-                            Main.NewText("Exceeded max loop count for hp drawing", Color.Red);
+                            //Main.NewText("Exceeded max loop count for hp drawing", Color.Red);
                             break;
                         }
 

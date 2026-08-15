@@ -1,0 +1,166 @@
+[
+    {
+        "Name": "CultistDevote",
+        "X": 141,
+        "Y": 129
+    },
+    {
+        "Name": "CultistDevote",
+        "X": 213,
+        "Y": 161
+    },
+    {
+        "Name": "CultistDevote",
+        "X": 217,
+        "Y": 161
+    },
+    {
+        "Name": "CultistDevote",
+        "X": 292,
+        "Y": 64
+    },
+    {
+        "Name": "CultistArcherBlue",
+        "X": 290,
+        "Y": 213
+    },
+    {
+        "Name": "CultistDevote",
+        "X": 326,
+        "Y": 64
+    },
+    {
+        "Name": "CultistDevote",
+        "X": 302,
+        "Y": 178
+    },
+    {
+        "Name": "CultistDevote",
+        "X": 642,
+        "Y": 193
+    },
+    {
+        "Name": "SkeletonSniper",
+        "X": 525,
+        "Y": 183
+    },
+    {
+        "Name": "SkeletonSniper",
+        "X": 542,
+        "Y": 193
+    },
+    {
+        "Name": "Mummy",
+        "X": 216,
+        "Y": 180
+    },
+    {
+        "Name": "CultistDevote",
+        "X": 124,
+        "Y": 177
+    },
+    {
+        "Name": "CultistArcherBlue",
+        "X": 101,
+        "Y": 102
+    },
+    {
+        "Name": "CultistArcherBlue",
+        "X": 121,
+        "Y": 102
+    },
+    {
+        "Name": "DesertGhoul",
+        "X": 74,
+        "Y": 130
+    },
+    {
+        "Name": "DesertGhoul",
+        "X": 78,
+        "Y": 130
+    },
+    {
+        "Name": "DesertGhoul",
+        "X": 112,
+        "Y": 102
+    },
+    {
+        "Name": "DesertGhoul",
+        "X": 502,
+        "Y": 181
+    },
+    {
+        "Name": "DesertGhoul",
+        "X": 542,
+        "Y": 181
+    },
+    {
+        "Name": "Mummy",
+        "X": 312,
+        "Y": 127
+    },
+    {
+        "Name": "Mummy",
+        "X": 193,
+        "Y": 147
+    },
+    {
+        "Name": "Mummy",
+        "X": 219,
+        "Y": 180
+    },
+    {
+        "Name": "DesertGhoul",
+        "X": 286,
+        "Y": 162
+    },
+    {
+        "Name": "DesertGhoul",
+        "X": 305,
+        "Y": 162
+    },
+    {
+        "Name": "CultistDevote",
+        "X": 340,
+        "Y": 174
+    },
+    {
+        "Name": "Mummy",
+        "X": 391,
+        "Y": 162
+    },
+    {
+        "Name": "CultistDevote",
+        "X": 418,
+        "Y": 182
+    },
+    { 
+        "WIdPool" : [
+      { "Name" : "CultistDevote", "Weight" : 1},
+      { "Name" : "TargetDummy", "Weight" : 1 }
+                    ],
+        "X" : 268,
+        "Y" : 144
+    },
+    { 
+        "WIdPool" : [
+      { "Name" : "CultistDevote", "Weight" : 1},
+      { "Name" : "TargetDummy", "Weight" : 1 }
+                    ],
+        "X" : 255,
+        "Y" : 144
+    },
+    { 
+        "WIdPool" : [
+      { "Name" : "Merchant", "Weight" : 1},
+      { "Name" : "ArmsDealer", "Weight" : 1 }
+                    ],
+        "X" : 366,
+        "Y" : 141
+    },
+    {
+        "Name": "CultistDevote",
+        "X": 678,
+        "Y": 319
+    }
+]

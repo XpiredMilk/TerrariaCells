@@ -4,7 +4,12 @@ Configs: {
 
 		DisableZoom: {
 			Label: Disable Zoom Cap
-			Tooltip: Disables the >175% cap on the game's zoom
+			Tooltip:
+				'''
+					Disables the >175% cap on the game's zoom
+					[c/ff6633:WARNING]: This is not the recommended experience.
+					Certain interactions may not work as intended, and the game feel will be vastly different.
+				'''
 		}
 
 		Headers: {
@@ -192,19 +197,55 @@ Configs: {
 
 	DebuffIndicators: {
 		Tooltip: ""
-		None.Label: None
-		Icon.Label: Icon
-		Particles.Label: Particles
-		IconAndParticles.Label: Icon and Particles
+
+		None: {
+			Label: None
+			Tooltip: ""
+		}
+
+		Icon: {
+			Label: Icon
+			Tooltip: ""
+		}
+
+		Particles: {
+			Label: Particles
+			Tooltip: ""
+		}
+
+		IconAndParticles: {
+			Label: Icon and Particles
+			Tooltip: ""
+		}
 	}
 
 	AmmoPositionMode: {
 		Tooltip: ""
-		Cursor.Label: Cursor
-		Tween.Label: Tween
-		TweenSag.Label: Tween Sag
-		Player.Label: Player
-		Resource.Label: Resource
+
+		Cursor: {
+			Label: Cursor
+			Tooltip: ""
+		}
+
+		Tween: {
+			Label: Tween
+			Tooltip: ""
+		}
+
+		TweenSag: {
+			Label: Tween Sag
+			Tooltip: ""
+		}
+
+		Player: {
+			Label: Player
+			Tooltip: ""
+		}
+
+		Resource: {
+			Label: Resource
+			Tooltip: ""
+		}
 	}
 }
 
@@ -309,6 +350,16 @@ Items: {
 		DisplayName: Dungeon Pylon
 		Tooltip: ""
 	}
+
+	ItemPickup: {
+		DisplayName: Item Pickup
+		Tooltip: ""
+	}
+
+	MusicBoxCrimson: {
+		Tooltip: ""
+		DisplayName: Music Box (Crimson | Aeolian - Sarcoma)
+	}
 }
 
 Projectiles: {
@@ -344,6 +395,7 @@ Projectiles: {
 	BeeMissile.DisplayName: Bee Missile
 	BeeMissileBee.DisplayName: Bee
 	DripplerExplosion.DisplayName: Drippler Explosion
+	InfernoPotionProjectile.DisplayName: Inferno Potion Projectile
 }
 
 Tooltips: {
@@ -352,6 +404,169 @@ Tooltips: {
 	Cooldown: Cooldown: {0} Seconds
 	SummonTime: Summon Time: {0} Seconds
 	AttacksPerSecond: " ({0} Attacks Per Second)"
+
+	Modifiers: {
+		Damage: "{0}% damage"
+		ProjectileVelocity: "{0}% projectile speed"
+		AttackSpeed: "{0}% attack speed"
+		Size: "{0}% weapon size"
+		ManaCost: "{0}% mana cost"
+		ImbuedDamage: "{0}% damage, {1}% mana cost"
+		FrenzyFire: "{0}% damage, {0}% attack speed"
+		DamageOnDebuff: "{0}% damage vs targets afflicted by {2}"
+		CustomAmmoBullet: Weapon fires {2}s
+		ApplyDebuff: Inflicts {2} for {3} seconds
+		CritsExplode: Critical strikes are explosive
+		DropMoreMana: Enemies drop {0}% more Mana Stars when hit
+	}
+
+	Category: {
+		Weapons: Weapon
+		Abilities: Ability
+		Accessories: Accessory
+		Armor: Armour
+		Potions: Potion
+	}
+
+	AbilityDuration: Duration {0} second(s)
+	AbilityCooldown: Cooldown {0} second(s)
+
+	Items: {
+		# Weapons
+		SniperRifle.Tooltip: Inflicts critical strikes against bosses
+		FieryGreatsword.Tooltip: Striking oiled targets causes explosions, inflicting critical strikes
+		PhoenixBlaster.Tooltip: The final 5 bullets inflict critical strikes
+		SawtoothShark.Tooltip: Rips into enemies, causing them to bleed
+		Gladius.Tooltip: Inflicts critical strikes against poisoned or bleeding targets
+		AmberStaff.Tooltip: Coats targets in oil
+		EmeraldStaff.Tooltip: Inflicts hit enemies with poison
+		RubyStaff.Tooltip: Sets enemies ablaze
+		AleThrowingGlove.Tooltip: Coats targets in oil
+		Minishark.Tooltip: Inflicts critical hits to nearby enemies
+		# Abilities
+		MagicPowerPotion.Tooltip:
+			'''
+			Imbues you with Magic Power
+			Your spells become free
+			'''
+		IronskinPotion.Tooltip: 30% increased movement speed
+		WrathPotion.Tooltip: 25% increased damage
+		BouncyDynamite.Tooltip: This is a good idea
+		DD2FlameburstTowerT1Popper.Tooltip: Projectiles explode on oiled targets, inflicting critical strikes
+		# Accessories
+		AvengerEmblem.Tooltip: Increases damage by 15%
+		BandofRegeneration.Tooltip: Killing an enemy heals you by 1% of your max HP
+		BerserkerGlove.Tooltip: Taking damage briefly increases melee damage by 30%
+		FastClock.Tooltip: Killing an enemy briefly increases your speed
+		FeralClaws.Tooltip: 40% increased melee attack speed
+		FrozenTurtleShell.Tooltip:
+			'''
+			If you would die, instead survive on 1 HP
+			Consumed on use
+			'''
+		ObsidianShield.Tooltip:
+			'''
+			Immunity to knockback
+			Reduces damage taken by 20%
+			'''
+		ReconScope.Tooltip: 30% increased damage when no enemies are nearby
+		StalkersQuiver.Tooltip: Arrow attacks cause spectral arrows to attack the target
+		PygmyNecklace.Tooltip: Increases the number of summoned minions by 1 per minion type
+
+		ChlorophyteDye: {
+			ItemName: Chlorophyte Coating
+			Tooltip: Bullets and arrows become coated in chlorophyte
+		}
+
+		CelestialMagnet.Tooltip: Increased mana star pickup range
+		NaturesGift.Tooltip: 33% reduced mana cost
+		ArcaneFlower.Tooltip:
+			'''
+			50% increased magic damage
+			50% increased mana cost
+			'''
+		ManaRegenerationBand.Tooltip: Mana passively regenerates
+		MagicCuffs.Tooltip: Restore mana when taking damage
+		Nazar.Tooltip: Melee attacks restore 20 Mana
+		ThePlan.Tooltip: 30% increased damage against healthy enemies
+		CelestialStone.Tooltip: Critical Strikes reduce ability cooldowns by 0.5 sec
+		FlaskofVenom.Tooltip: Your Poison effects are replaced with Venom
+		HerculesBeetle.Tooltip: 50% increased damage to Abilities
+		PhilosophersStone.Tooltip: Health Potions restore 100% more health
+
+		# Armour
+		NinjaHood: {
+			SetBonus: Become immune after striking an enemy
+			Tooltip: 15% increased damage
+		}
+
+		NinjaShirt.Tooltip:
+			'''
+			Allows the ability to dash
+			Double tap in a direction
+			'''
+		NinjaPants.Tooltip: 15% increased movement speed
+
+		JungleHat: {
+			SetBonus: Killing an enemy makes your spells free for a duration
+			Tooltip: 20% increased magic damage
+		}
+
+		JungleShirt.Tooltip: Picking up mana reduces ability cooldowns by 0.5 sec
+		JunglePants.Tooltip:
+			'''
+			10% increased movement speed
+			10% increased magic damage
+			'''
+
+		NecroHelmet: {
+			SetBonus:
+				'''
+				Bows charge twice as fast
+				Guns reload twice as fast
+				'''
+			Tooltip: 20% increased ranged damage
+		}
+
+		NecroBreastplate.Tooltip: Killing an enemy spawns baby spiders to attack your foes
+		NecroGreaves.Tooltip:
+			'''
+			10% increased movement speed
+			The last bullet in a magazine deals 50% more damage
+			'''
+
+		MoltenHelmet: {
+			SetBonus: Your Fire effects are replaced with Hellfire
+			Tooltip: 20% increased melee damage
+		}
+
+		MoltenBreastplate.Tooltip:
+			'''
+			Reduces damage taken by 20%
+			Taking damage applies a stack of On Fire to nearby enemies
+			'''
+		MoltenGreaves.Tooltip:
+			'''
+			10% increased movement speed
+			Leaves a trail of flames in your wake
+			'''
+
+		GoldHelmet: {
+			SetBonus: Enemies drop money on hit
+			Tooltip:
+				'''
+				{0}% increased damage
+				Increases with current amount of money held
+				'''
+		}
+
+		GoldChainmail.Tooltip: Slain enemies drop more gold
+		GoldGreaves.Tooltip:
+			'''
+			{0}% increased movement speed
+			Increases with current amount of money held
+			'''
+	}
 }
 
 Keybinds: {
@@ -389,6 +604,11 @@ Buffs: {
 		DisplayName: Recon Scope
 		Description: +30% increased damage
 	}
+
+	CustomInfernoBuff: {
+		DisplayName: Inferno
+		Description: Nearby enemies are ignited
+	}
 }
 
 Tiles: {
@@ -406,4 +626,94 @@ blankInputEmptyContextText: _
 unlocks: {
 	goblin: Unlocked the Goblin Tinkerer!
 	cloud: Unlocked double jump!
+}
+
+dialogue.guide.progress: Unlocks
+
+ui: {
+	metaprogress: {
+		entry_6: You have defeated the Wall of Flesh
+		entry_5: You have defeated Skeletron
+		entry_4: You have defeated the Queen Bee
+		entry_3: You have defeated the Eater of Worlds
+		entry_2: You have defeated the Brain of Cthulhu
+		entry_1: You unlocked the Goblin Tinkerer in the Inn
+		entry_0: You unlocked the Double Jump!
+	}
+
+	runData: {
+		field: {
+			HitsTaken: {
+				label: Hits Taken
+				tooltip: The number of individual hits you received
+			}
+
+			Kills: {
+				label: Kills
+				tooltip: The number of enemies you killed
+			}
+
+			Time: {
+				label: Time
+				tooltip: The amount of time taken
+			}
+
+			DamageTaken: {
+				label: Damage Taken
+				tooltip: The amount of damage you received
+			}
+
+			HitsDealt: {
+				label: Hits Dealt
+				tooltip: The number of individual hits you dealt
+			}
+
+			DamageDealt: {
+				label: Damage Dealt
+				tooltip: The amount of damage you dealt
+			}
+
+			Money: {
+				label: Money
+				tooltip: The amount of money you picked up
+			}
+
+			Life: {
+				label: Life
+				tooltip: The number of life crystals you found
+			}
+
+			Crits: {
+				label: Crits
+				tooltip: Crits_tooltip
+			}
+
+			Debuffs: {
+				label: Debuffs
+				tooltip: Debuffs_tooltip
+			}
+		}
+
+		close.text: Close
+
+		exit: {
+			text: End Run
+			confirm: Double click to confirm
+		}
+	}
+}
+
+Category: {
+	Weapons: Weapon
+	Abilities: Ability
+	Accessories: Accessory
+	Armor: Armour
+	Potions: Potion
+}
+
+"": Duration {0} {^0second;seconds}
+
+popup: {
+	foundItem: You found the {0}!
+	unlockItem: You unlocked the {0}!
 }

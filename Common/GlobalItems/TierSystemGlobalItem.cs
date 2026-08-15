@@ -24,11 +24,13 @@ namespace TerrariaCells.Common.GlobalItems
 
         public override bool InstancePerEntity => true;
 
-        // Only apply item levels to weapons
+        // Only apply item levels to weapons or the inferno potion
         public override bool AppliesToEntity(Item entity, bool lateInstantiation)
         {
-            return (lateInstantiation && (entity.damage > 0 || entity.shoot != ItemID.None))
-                || InventoryManager.GetItemCategorization(entity.type) == TerraCellsItemCategory.Weapon;
+            return (lateInstantiation && (entity.damage > 0 || entity.shoot != ProjectileID.None))
+                || InventoryManager.GetItemCategorization(entity.type) == ItemsJson.ItemCategory.Weapons
+                || entity.type == ItemID.InfernoPotion;
+        #pragma warning enable
         }
 
         public override void SetDefaults(Item item)
@@ -38,6 +40,8 @@ namespace TerrariaCells.Common.GlobalItems
 
             //item.rare = itemLevel;
             //Math.Clamp(item.rare, 0, 10);
+            
+            item.value = (int)(item.value * MathF.Pow(2, (itemLevel - 1) * 0.75f));
         }
 
         public void AddLevels(Item item, int level)
@@ -93,8 +97,8 @@ namespace TerrariaCells.Common.GlobalItems
         }
         public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
         {
-            TerraCellsItemCategory id = InventoryManager.GetItemCategorization(item.netID);
-            if (!(id == TerraCellsItemCategory.Weapon || id == TerraCellsItemCategory.Skill)) {
+            var id = InventoryManager.GetItemCategorization(item.netID);
+            if (!(id == ItemsJson.ItemCategory.Weapons || id == ItemsJson.ItemCategory.Abilities)) {
                 return;
             }
             // Iterate through the list of tooltips so we can change vanilla tooltips

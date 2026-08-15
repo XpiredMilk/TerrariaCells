@@ -151,6 +151,7 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Forest
                 {
                     ResetAI(npc);
                     npc.ai[1] = Lunge;
+                    npc.DoAttackWarning();
                     return;
                 }
             }

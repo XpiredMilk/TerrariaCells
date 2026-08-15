@@ -100,6 +100,7 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Crimson
 				ResetAI(npc);
 				if (Distance(target.position.Y, npc.position.Y) > ToTileDist(4) || target.velocity.Y < 0)
 				{
+					npc.DoAttackWarning();
 					npc.ai[1] = Jump;
 				}
 				else
@@ -140,6 +141,7 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Crimson
 			if (npc.ai[0] == 0)
 			{
 				npc.ai[2] = DirectionFromTo(npc.Center.X, target.Center.X);
+				npc.DoAttackWarning();
 			}
 
 			const int Start = 25;

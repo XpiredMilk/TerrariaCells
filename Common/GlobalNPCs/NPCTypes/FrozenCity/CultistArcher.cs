@@ -83,6 +83,10 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
                     SoundEngine.PlaySound(SoundID.Item5, npc.Center);
                     npc.ai[2] = -15;
                 }
+                else if((int)npc.ai[2] == 20)
+                {
+                    npc.DoAttackWarning();
+                }
             }
             else
             {

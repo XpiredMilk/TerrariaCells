@@ -84,7 +84,7 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Forest
 		private void CastingAI(NPC npc)
 		{
 			int timer = npc.Timer();
-			if (timer % 15 == 0 && Main.netMode != NetmodeID.MultiplayerClient)
+			if (timer % 17 == 0 && Main.netMode != NetmodeID.MultiplayerClient)
 			{
                 NPC ball = NPC.NewNPCDirect(npc.GetSource_FromAI(), npc.Center, Terraria.ID.NPCID.ChaosBall, ai0: 1);
                 ball.target = npc.target;
@@ -97,9 +97,10 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Forest
                 ball.damage = npc.damage;
                 ball.netUpdate = true;
 			}
-			if (timer > 45 * 3)
+			if (timer > 136)
 			{
 				npc.Phase(Teleporting);
+				return;
 			}
 			npc.velocity.X *= 0.8f;
 			npc.velocity.Y += 0.14f;
@@ -191,7 +192,7 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Forest
 				npc.ai[3] = ground.Y;
                 npc.netUpdate = true;
 			}
-			if (timer > 210)
+			if (timer > 225)
 			{
 				//for (int i = 0; i < 7; i++)
 				//{
@@ -207,10 +208,10 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Forest
                     npc.TargetClosest(false);
                 }
 				npc.velocity.Y += 0.14f;
-				if (timer > 255)
+				if (timer > 310)
 					npc.Phase(Casting);
 			}
-			else if(timer > 5 && MathF.Pow(timer, 2) % 60 < 5)
+			else if(timer > 5 && MathF.Pow(timer, 1.8f) % 60 < 5)
 			{
 				Dust d = Dust.NewDustDirect(new Vector2(npc.ai[2], npc.ai[3]-2), npc.width, npc.height, Terraria.ID.DustID.Shadowflame);
 				d.scale = Main.rand.NextFloat(1.33f, 1.67f);

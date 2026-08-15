@@ -60,9 +60,13 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
                 {
                     Projectile.NewProjectile(npc.GetSource_FromAI(), npc.Center - new Vector2(0, 60), Vector2.Zero, ModContent.ProjectileType<IceBall>(), TCellsUtils.ScaledHostileDamage(npc.damage), 1, Main.myPlayer, 0, target.whoAmI, 70);
                 }
-                if (npc.ai[0] >= 90)
+                else if (npc.ai[0] >= 90)
                 {
-                    npc.ai[0] = -50;
+                    npc.ai[0] = -50; //Why does it reset to -50 D:
+                }
+                else if(npc.ai[0] == 0)
+                {
+                    npc.DoAttackWarning();
                 }
             }
 

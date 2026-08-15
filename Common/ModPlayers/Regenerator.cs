@@ -12,6 +12,7 @@ using ReLogic.Content;
 using MonoMod.Cil;
 using Mono.Cecil.Cil;
 using System.Reflection;
+using TerrariaCells.Common.Utilities;
 
 namespace TerrariaCells.Common.ModPlayers
 {
@@ -353,7 +354,7 @@ namespace TerrariaCells.Common.ModPlayers
 		{
 			if (!item.DamageType.CountsAsClass(DamageClass.Melee))
 				return;
-			if (target.lifeMax < 5 || Terraria.ID.NPCID.Sets.ProjectileNPC[target.type] || !target.CanBeChasedBy())
+			if(!target.CanBeUsedForHitEffects())
 				return;
 			RallyHeal(damageDone);
 		}
@@ -361,7 +362,7 @@ namespace TerrariaCells.Common.ModPlayers
 		{
 			if (!proj.DamageType.CountsAsClass(DamageClass.Melee))
 				return;
-			if (target.lifeMax < 5 || Terraria.ID.NPCID.Sets.ProjectileNPC[target.type] || !target.CanBeChasedBy())
+			if (!target.CanBeUsedForHitEffects())
 				return;
 			RallyHeal(damageDone);
 		}

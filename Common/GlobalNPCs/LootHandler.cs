@@ -8,6 +8,7 @@ using Terraria.ModLoader;
 using Microsoft.Xna.Framework;
 using Terraria.GameContent.ItemDropRules;
 using System.Reflection;
+using TerrariaCells.Common.Utilities;
 
 namespace TerrariaCells.Common.GlobalNPCs
 {
@@ -38,7 +39,7 @@ namespace TerrariaCells.Common.GlobalNPCs
 
         private void ModifyDropHeals(On_NPC.orig_NPCLoot_DropHeals orig, NPC self, Player closestPlayer)
         {
-            if (!NPCID.Sets.NeverDropsResourcePickups[self.type] && self.lifeMax > 5 && !self.friendly && self.CanBeChasedBy() && !NPCID.Sets.ProjectileNPC[self.type])
+            if (!NPCID.Sets.NeverDropsResourcePickups[self.type] && self.CanBeUsedForHitEffects())
                 DropFoodHeals.TryDroppingHeal(self, closestPlayer);
             return;
         }

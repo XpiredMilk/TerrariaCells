@@ -9,6 +9,7 @@ using MonoMod;
 using MonoMod.Cil;
 using Mono.Cecil.Cil;
 using Terraria.DataStructures;
+using TerrariaCells.Common.Utilities;
 
 namespace TerrariaCells.Common.ModPlayers
 {
@@ -30,6 +31,7 @@ namespace TerrariaCells.Common.ModPlayers
         public bool celestialStone; //Reduce ability cooldowns by 0.5 sec on critical hit
         public bool philoStone; //+100% healing potion efficacy
         public bool heracles; //Abilities deal +50% damage
+        public bool pygmyNecklace; //Increases the number of summoned minions by 1 per minion type
 
         public override void OnHurt(Player.HurtInfo info)
         {
@@ -249,6 +251,7 @@ namespace TerrariaCells.Common.ModPlayers
             magicCuffs = false;
             philoStone = false;
             heracles = false;
+            pygmyNecklace = false;
         }
         public override void ModifyShootStats(Item item, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)
         {
@@ -350,9 +353,11 @@ namespace TerrariaCells.Common.ModPlayers
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             if (target.life < 1) OnKill(target, hit, damageDone);
+            
+            if(!target.CanBeUsedForHitEffects()) return;
             if (hit.DamageType.CountsAsClass(DamageClass.Melee))
             {
-                if (nazar && target.CanBeChasedBy())
+                if (nazar)
                 {
                     Player.statMana += 20;
                     Player.ManaEffect(20);

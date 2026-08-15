@@ -91,7 +91,11 @@ namespace TerrariaCells.Common.GlobalTiles
                         i--;
                     if (tile.TileFrameY % 38 != 0)
                         j--;
-                    return instance?.lootedChests?.Any(c => (Main.chest[c].x == i && Main.chest[c].y == j) && Main.chest[c].frame > 0) == true;
+                    if(instance is null) TerrariaCells.Instance.Logger.Warn($"{nameof(Systems.ChestLootSpawner)} instance was null");
+                    else if(instance.lootedChests is null) TerrariaCells.Instance.Logger.Warn($"{nameof(Systems.ChestLootSpawner.lootedChests)} was null");
+                    else if(Main.chest is null) TerrariaCells.Instance.Logger.Warn($"{nameof(Main.chest)} was null");
+                    else return instance.lootedChests.Any(c => Main.chest[c] is not null && (Main.chest[c].x == i && Main.chest[c].y == j) && Main.chest[c].frame > 0);
+                    return false;
                 case TileID.Heart:
                 case TileID.ManaCrystal:
                     return tile.IsActuated;

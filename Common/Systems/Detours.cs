@@ -27,7 +27,7 @@ namespace TerrariaCells.Common.Systems
     {
         public override void ClearWorld()
         {
-            Mod.Logger.Debug("Action: " + RewardTrackerSystem.trackerState + "\n" + RewardTrackerSystem.LevelTime.ToString());
+            //Mod.Logger.Debug("Action: " + RewardTrackerSystem.trackerState + "\n" + RewardTrackerSystem.LevelTime.ToString());
             RewardTrackerSystem.UpdateTracker(RewardTrackerSystem.TrackerAction.Stop);
         }
 
@@ -126,33 +126,30 @@ namespace TerrariaCells.Common.Systems
             Terraria.UI.UIElement listeningElement
         )
         {
+            orig.Invoke(self, evt, listeningElement);
             if (DevConfig.Instance.EnableCustomWorldGen)
             {
-                string worldName =
-                    "TerraCells-v" + ModLoader.GetMod("TerrariaCells").Version.ToString();
+                WorldGen.noTrapsWorldGen = false;
+                WorldGen.notTheBees = false;
+                WorldGen.getGoodWorldGen = false;
+                WorldGen.tenthAnniversaryWorldGen = false;
+                WorldGen.dontStarveWorldGen = false;
+                WorldGen.tempRemixWorldGen = false;
+                WorldGen.tempTenthAnniversaryWorldGen = false;
+                WorldGen.everythingWorldGen = false;
 
-                // worldName = Main.GetWorldPathFromName(worldName, false);
+                string worldName = $"TerraCells ({TerrariaCells.Instance.Version}-BETA)";
+
+                char[] replacements = [ '.', '-', '_', '~', ':', '*' ];
                 char[] invalidFileNameChars = Path.GetInvalidFileNameChars();
                 string text = "";
                 foreach (char c in worldName)
                 {
-                    text += (!invalidFileNameChars.Contains(c)) ? ((c != ' ') ? c : '_') : '-';
+                    text += (!invalidFileNameChars.Contains(c)) ? c : replacements.First(x => !invalidFileNameChars.Contains(x));
                 }
 
-                text = text.Replace(".", "-");
-                text = text.Replace("*", "_");
-
                 worldName = text;
-
-                // orig.Invoke(self, evt, listeningElement);
-
-                // UIWorldCreation.FinishCreatingWorld();
-
-                // UIWorldCreation.
-
-                // // Main.spawnTileX = 840;
-                // // Main.spawnTileY = 240;
-                // // case WorldSizeId.Large:
+                
                 Main.maxTilesX = 8400;
                 Main.maxTilesY = 2400;
                 Main.worldSurface = 400;
@@ -160,10 +157,8 @@ namespace TerrariaCells.Common.Systems
 
                 WorldGen.setWorldSize();
 
-                // // case WorldDifficultyId.Creative:
-                Main.GameMode = 3;
+                Main.GameMode = GameModeID.Normal;
 
-                // // case WorldEvilId.Random:
                 WorldGen.WorldGenParam_Evil = -1;
 
                 if (FileUtilities.Exists(Main.WorldPath + "/" + worldName + ".wld", false))
@@ -181,49 +176,38 @@ namespace TerrariaCells.Common.Systems
                     Main.GameMode
                 );
 
-                // if (processedSeed.Length == 0)
                 Main.ActiveWorldFileData.SetSeedToRandom();
-                // else
-                //     Main.ActiveWorldFileData.SetSeed(processedSeed);
 
-                // Main.menuMode = 10;
+                Main.menuMode = 10;
 
                 SoundEngine.PlaySound(SoundID.MenuOpen);
-                WorldGen
-                    .CreateNewWorld()
+                WorldGen.CreateNewWorld()
                     .GetAwaiter()
                     .OnCompleted(
-                        delegate
-                        {
-                            FileUtilities.Copy(
-                                Main.worldPathName,
-                                Main.worldPathName + ".bak",
-                                false
-                            );
-                            WorldGen.playWorld();
+                        delegate {                            
+                            try
+                            {
+                                //Hi! If you're reading this, you're probably wondering why we're loading the world here
+                                //..just to immediately save it.
+                                //For reasons we (I) haven't yet been able to identify, visual effects such as dusts, gores,
+                                //combat text, and several others just.. stopped working, if the world is first loaded in
+                                //multiplayer. As far as we (I) can tell, nothing appears to be wrong in any of our
+                                //appropriate ModSystem hooks (LoadWorld, ClearWorld, etc), and no exceptions are being
+                                //logged.
+                                //Anyway, this is mostly intended as a temporary solution (which means it will be more
+                                //permanent than anything else, ever), I just wanted to have a more polished experience for
+                                //players, going in. This is the cost of that.
+                                // ~ Stardust
+                                WorldFile.LoadWorld(false);
+                                WorldFile.SaveWorld(false);
+                            }
+                            catch(Exception x)
+                            {
+                                TerrariaCells.Instance.Logger.Error(x.Message);
+                            }
                         }
                     );
-
-                return;
             }
-
-            SoundEngine.PlaySound(SoundID.MenuOpen);
-            Debug.Write(Main.WorldPath);
-            byte[] bytes = ModContent
-                .GetInstance<TerrariaCells>()
-                .GetFileBytes("Common/Assets/World/terracellsv0.2.1.wld");
-            File.WriteAllBytes(Main.WorldPath + "/terracellsv0.2.1.wld", bytes);
-            byte[] bytes2 = ModContent
-                .GetInstance<TerrariaCells>()
-                .GetFileBytes("Common/Assets/World/terracellsv0.2.1.twld");
-            File.WriteAllBytes(Main.WorldPath + "/terracellsv0.2.1.twld", bytes2);
-
-            Main.ActiveWorldFileData = new WorldFileData(
-                Main.WorldPath + "/terracellsv0.2.1.wld",
-                false
-            );
-            Main.worldName = "terracellsv0.3";
-            WorldGen.playWorld();
         }
 
         //reduce amount of mana the little star pickups give

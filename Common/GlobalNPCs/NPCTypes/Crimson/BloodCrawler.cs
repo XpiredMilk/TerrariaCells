@@ -134,6 +134,11 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
                     }
                 }
 
+                if(ExtraAI[0] == bloodCrawlerChargeUpTime - 20)
+                {
+                    npc.DoAttackWarning();
+                }
+                
                 if (ExtraAI[0] < bloodCrawlerChargeUpTime)
                 {
                     npc.GetGlobalNPC<CombatNPC>().allowContactDamage = false;

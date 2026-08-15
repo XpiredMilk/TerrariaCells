@@ -7,6 +7,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using TerrariaCells.Common.GlobalItems;
+using TerrariaCells.Common.Utilities;
 
 namespace TerrariaCells.Common.GlobalProjectiles
 {
@@ -25,6 +26,8 @@ namespace TerrariaCells.Common.GlobalProjectiles
         }
         public override void OnHitNPC(Projectile projectile, NPC target, NPC.HitInfo hit, int damageDone)
         {
+            if(!target.CanBeUsedForHitEffects() || NPCID.Sets.NeverDropsResourcePickups[target.type]) return;
+        
             int starsSpawned = 1;
             if (
                 projectile.TryGetGlobalProjectile(out ProjectileFunker projectileFunker)
@@ -40,8 +43,6 @@ namespace TerrariaCells.Common.GlobalProjectiles
                 }
             }
 
-            if (NPCID.Sets.ProjectileNPC[target.type])
-                return;
 
             if (projectile.DamageType.CountsAsClass(DamageClass.Magic))
             {

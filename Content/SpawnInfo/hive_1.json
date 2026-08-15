@@ -121,12 +121,7 @@
     },
     {
         "Name": "BloodCrawler",
-        "X": 240,
+        "X": 241,
         "Y": 146
-    },
-    {
-        "Name": "WitchDoctor",
-        "X": 11,
-        "Y": 135
     }
 ]

@@ -76,7 +76,8 @@ public class ClickedHeartsTracker : ModSystem
         if (!collectedHearts.Contains(coords))
         {
             collectedHearts.Add(coords);
-            Main.player[Main.myPlayer].GetModPlayer<LifeModPlayer>().IncreasePlayerHealth(20);
+            Main.LocalPlayer.GetModPlayer<LifeModPlayer>().IncreasePlayerHealth(20);
+            Main.LocalPlayer.GetModPlayer<Common.Systems.RunDataPlayer>().PickupLifeCrystal();
             tile = Main.tile[i, j];
             tile.IsActuated = true;
             tile = Main.tile[i + 1, j];

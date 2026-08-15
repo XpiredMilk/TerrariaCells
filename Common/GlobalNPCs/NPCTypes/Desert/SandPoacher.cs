@@ -91,9 +91,9 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
                 return;
             }
 
-            int timeWalking = 200;
-            int timeDigging = 100;
-            int stabTime = 30;
+            const int timeWalking = 200;
+            const int timeDigging = 100;
+            const int stabTime = 30;
 
             npc.ai[2]++;
             //during dig
@@ -172,6 +172,10 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Shared
             //stab
             if (npc.ai[3] == 2)
             {
+                if((int)ExtraAI[0] == 0)
+                {
+                    npc.DoAttackWarning();
+                }
                 CombatNPC.ToggleContactDamage(npc, true);
                 ShouldWalk = false;
                 npc.velocity.X *= 0.9f;

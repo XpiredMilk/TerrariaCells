@@ -27,11 +27,9 @@ namespace TerrariaCells.Content.Tiles.LevelExitPylon;
 /// override in order to streamline that process.)
 /// </br>
 /// </summary>
-public class ForestExitPylon : ModTile, ITerraCellsCategorization
+public class ForestExitPylon : ModTile
 {
-
-    public TerraCellsItemCategory Category => TerraCellsItemCategory.Storage;
-
+    public const string END_RUN_PORTAL_TEXT = "END_RUN";
 
     public override string Texture =>
         (GetType().Namespace + "." + "ExamplePylonTile").Replace('.', '/');
@@ -202,9 +200,11 @@ public class ForestExitPylon : ModTile, ITerraCellsCategorization
         {
             if (Main.netMode == NetmodeID.SinglePlayer)
             {
-                if (!ModContent.GetInstance<TeleportTracker>().CanTeleport(entity.Destination))
+                if(entity.Destination.Equals(END_RUN_PORTAL_TEXT) || !ModContent.GetInstance<TeleportTracker>().CanTeleport(entity.Destination))
                 {
-                    Main.NewText("This level: coming soon. Maybe.");
+                    //ModContent.GetInstance<RunDataSystem>().FlushPath();
+                    //Main.LocalPlayer.GetModPlayer<RunDataPlayer>().FlushPath();
+                    DeadCellsUISystem.ToggleActive<RunDataWindow>(true);
                 }
                 ModContent.GetInstance<TeleportTracker>().Teleport(entity.Destination);
             }

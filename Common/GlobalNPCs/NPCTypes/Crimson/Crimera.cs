@@ -143,6 +143,8 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Crimson
 			}
 			else if (timer < 30)
 			{
+				if(timer == 15)
+					npc.DoAttackWarning();
 				npc.velocity = Vector2.Lerp(npc.velocity, npc.DirectionFrom(target.Center) * 3, 0.1f);
 				npc.rotation = npc.DirectionTo(target.Center).ToRotation() - MathHelper.PiOver2;
 				if (npc.collideX || npc.collideY)

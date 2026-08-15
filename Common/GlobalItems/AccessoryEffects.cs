@@ -85,6 +85,9 @@ namespace TerrariaCells.Common.GlobalItems
 			ModPlayers.AccessoryPlayer modPlayer = player.GetModPlayer<ModPlayers.AccessoryPlayer>();
 			switch (item.type)
 			{
+				case ItemID.AvengerEmblem:
+				player.GetDamage(DamageClass.Generic) += 0.15f;
+					break;
 				case ItemID.FastClock:
 					modPlayer.fastClock = true;
 					break;
@@ -104,7 +107,9 @@ namespace TerrariaCells.Common.GlobalItems
 				case ItemID.CelestialStone:
 					modPlayer.celestialStone = true;
 					break;
-
+				case ItemID.PygmyNecklace:
+					modPlayer.pygmyNecklace = true;
+					break;
 				case ItemID.FeralClaws:
 					player.GetAttackSpeed(DamageClass.Melee) += 0.4f;
 					break;
@@ -159,149 +164,6 @@ namespace TerrariaCells.Common.GlobalItems
 					break;
 			}
 		}
-
-		public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
-		{
-            //Why'd we even keep this method if it don't DO anything :(
-            return;
-			int ttCounter = 0;
-			void AddToolTip(string text)
-			{
-				if(ttCounter == 0)
-                    tooltips.ForEach(x =>
-                    {
-                        if (x.Name.StartsWith("Tooltip") && x.Mod == "Terraria")
-                        {
-                            x.Hide();
-                        }
-                    });
-
-                tooltips.Add(new TooltipLine(Mod, $"AccessoryTip{ttCounter++}", text));
-            }
-            switch (item.type)
-            {
-                case ItemID.Nazar:
-                    AddToolTip("Melee attacks restore 20 mana");
-                    break;
-                case ItemID.ArcaneFlower:
-                    AddToolTip("50% increased magic damage");
-                    AddToolTip("50% increased mana cost");
-                    break;
-                case ItemID.FrozenTurtleShell:
-                    AddToolTip("If you would die, instead survive with 1 HP");
-                    AddToolTip("Consumed on use");
-                    break;
-                case ItemID.BallOfFuseWire:
-                    AddToolTip("Explosions are much more powerful");
-                    break;
-                case ItemID.StalkersQuiver:
-                    AddToolTip("Arrow attacks cause spectral arrows to attack the target");
-                    break;
-                case ItemID.BandofRegeneration:
-                    AddToolTip("Killing an enemy restores 1% of your max HP");
-                    break;
-                case ItemID.FastClock:
-                    AddToolTip("Killing an enemy increases your speed briefly");
-                    break;
-                case ItemID.ChlorophyteDye:
-                    AddToolTip("Bullets and Arrows become coated in chlorophyte");
-                    break;
-                case ItemID.NaturesGift:
-                    AddToolTip("25% reduced mana cost");
-                    break;
-                case ItemID.BerserkerGlove:
-                    AddToolTip("4% increased damage on successive melee attacks");
-                    break;
-                case ItemID.FeralClaws:
-                    AddToolTip("40% increased melee attack speed");
-                    break;
-                case ItemID.ThePlan:
-                    AddToolTip("30% increased damage against healthy enemies");
-                    break;
-                case ItemID.ReconScope:
-                    AddToolTip("30% increased damage when no enemies are nearby");
-                    break;
-				case ItemID.CelestialStone:
-					AddToolTip("Critical Strikes reduce the cooldown of your abilities by 0.5 sec");
-					break;
-                default:
-                    return;
-            }
-        }
-
-        public IEnumerable<TooltipLine> GetTooltips(Item item)
-        {
-            return item.type switch
-            {
-				ItemID.CelestialStone => new TooltipLine[] {
-					new TooltipLine(Mod, "Tooltip0", "Critical Strikes reduce the cooldown of your abilities by 0.5 sec"),
-				},
-                ItemID.Nazar => [new(Mod, "Tooltip0", "Melee attacks restore 20 mana")],
-                ItemID.ArcaneFlower =>
-                [
-                    new(Mod, "Tooltip0", "50% increased magic damage"),
-                    new(Mod, "Tooltip1", "50% increased mana cost"),
-                ],
-                ItemID.FrozenTurtleShell =>
-                [
-                    new(Mod, "Tooltip0", "If you would die, instead survive with 1 HP"),
-                    new(Mod, "Tooltip1", "Consumed on use"),
-                ],
-                ItemID.BallOfFuseWire =>
-                [
-                    new(Mod, "Tooltip0", "Explosions are much more powerful"),
-                ],
-                ItemID.StalkersQuiver =>
-                [
-                    new(
-                        Mod,
-                        "Tooltip0",
-                        "Arrow attacks cause spectral arrows to attack the target"
-                    ),
-                ],
-                ItemID.BandofRegeneration =>
-                [
-                    new(Mod, "Tooltip0", "Killing an enemy restores 1% of your max HP"),
-                ],
-                ItemID.FastClock =>
-                [
-                    new(Mod, "Tooltip0", "Killing an enemy briefly increases your speed"),
-                ],
-                ItemID.ChlorophyteDye =>
-                [
-                    new(Mod, "Tooltip0", "Bullets and Arrows become coated in chlorophyte"),
-                ],
-                ItemID.NaturesGift => [new(Mod, "Tooltip0", "25% reduced mana cost")],
-                ItemID.BerserkerGlove =>
-                [
-                    new(Mod, "Tooltip0", "Taking damage briefly increases melee damage by 30%"),
-                ],
-                ItemID.FeralClaws => [new(Mod, "Tooltip0", "40% increased melee attack speed")],
-                ItemID.ThePlan =>
-                [
-                    new(Mod, "Tooltip0", "30% increased damage against healthy enemies"),
-                ],
-                ItemID.ReconScope =>
-                [
-                    new(Mod, "Tooltip0", "30% increased damage when no enemies are nearby"),
-                ],
-                ItemID.CelestialMagnet => [new(Mod, "Tooltip0", "Increased mana pickup range")],
-                ItemID.ManaRegenerationBand =>
-                [
-                    new(Mod, "Tooltip0", "Significantly increased mana regeneration"),
-                ],
-                ItemID.MagicCuffs => [new(Mod, "Tooltip0", "Gain mana when taking damage")],
-                ItemID.ObsidianShield =>
-                [
-                    new(Mod, "Tooltip0", "Immunity to knockback"),
-                    new(Mod, "Tooltip1", "+20% damage reduction"),
-                ],
-                ItemID.FlaskofVenom => [ new(Mod, "Tooltip0", "Poison replaced with Venom")],
-                ItemID.HerculesBeetle => [new(Mod, "Tooltip0", "50% increased damage to Abilities")],
-                ItemID.PhilosophersStone => [new(Mod, "Tooltip0", "Health Potions restore 2x as much health")],
-                _ => [],
-            };
-        }
 
 		public override void GrabRange(Item item, Player player, ref int grabRange)
 		{

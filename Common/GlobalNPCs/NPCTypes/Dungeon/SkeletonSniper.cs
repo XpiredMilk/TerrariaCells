@@ -213,6 +213,8 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Dungeon
                 npc.ai[3] = 0;
                 return;
             }
+            else if((int)npc.ai[0] == 85)
+                npc.DoAttackWarning();
 
             npc.velocity.X *= 0.9f;
             npc.velocity.Y += 0.036f;

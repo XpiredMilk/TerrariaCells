@@ -65,6 +65,9 @@ public class DeathReset : ModPlayer, IEntitySource
             Player.GetModPlayer<LifeModPlayer>().extraHealth = 0;
             Common.GlobalNPCs.NPCTypes.Crimson.BrainOfCthulhu.SpawnPos = null;
             GlobalNPCs.NPCTypes.Corruption.EaterOfWorlds.SpawnPos = null;
+            Player.statLife = Player.statLifeMax2;
+            
+            RunReset.Invoke(Player, RunReset.ResetContext.NewWorld);
         }
 
         if (Main.netMode == NetmodeID.MultiplayerClient)
@@ -152,12 +155,16 @@ public class DeathReset : ModPlayer, IEntitySource
         NewWorld,
         Death,
     }
-    private void ResetInventory(ResetInventoryContext context)
+    void ResetInventory(ResetInventoryContext context)
     {
         if (!DevConfig.Instance.DropItems)
             return;
         if (Player.whoAmI != Main.myPlayer)
             return;
+            
+        Player.GetModPlayer<Common.Systems.RunDataPlayer>().Reset();
+        if(context == ResetInventoryContext.NewWorld)
+            ModContent.GetInstance<Common.Systems.RunDataSystem>().Reset();
 
         #region Drop Items
         ref Item[] inventory = ref Player.inventory;
@@ -166,7 +173,7 @@ public class DeathReset : ModPlayer, IEntitySource
         IEntitySource playerDeath = Player.GetSource_Death();
         if (context == ResetInventoryContext.NewWorld)
         {
-            foreach ((int itemslot, TerraCellsItemCategory _) in InventoryManager.slotCategorizations)
+            foreach ((int itemslot, var _) in InventoryManager.slotCategorizations)
             {
                 inventory[itemslot].TurnToAir();
             }
@@ -190,7 +197,7 @@ public class DeathReset : ModPlayer, IEntitySource
         }
         else if (context == ResetInventoryContext.Death && Main.netMode != NetmodeID.Server)
         {
-            foreach ((int itemslot, TerraCellsItemCategory _) in InventoryManager.slotCategorizations)
+            foreach ((int itemslot, var _) in InventoryManager.slotCategorizations)
             {
                 inventory[itemslot].shimmered = true;
                 Player.TryDroppingSingleItem(playerDeath, inventory[itemslot]);

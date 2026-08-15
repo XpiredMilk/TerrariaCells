@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace TerrariaCells.Common.GlobalItems;
@@ -81,6 +82,7 @@ public partial class FunkyModifierItemModifier : GlobalItem
     [
         FunkyModifier.Damage(1.15f),
         FunkyModifier.Damage(1.30f),
+        FunkyModifier.Size(1.20f),
         FunkyModifier.ProjectileVelocity(1.50f),
         FunkyModifier.AttackSpeed(1.15f),
         FunkyModifier.AttackSpeed(1.25f),
@@ -89,8 +91,8 @@ public partial class FunkyModifierItemModifier : GlobalItem
         // FunkyModifier.FrenzyFire(1.40f, 0.75f),
         FunkyModifier.DamageOnDebuff(1.50f, BuffID.OnFire),
         FunkyModifier.DamageOnDebuff(1.50f, BuffID.Poisoned),
-        FunkyModifier.CustomBulletAmmo(ProjectileID.ExplosiveBullet),
-        FunkyModifier.CustomBulletAmmo(ProjectileID.BulletHighVelocity),
+        FunkyModifier.CustomBulletAmmo(ProjectileID.ExplosiveBullet, ItemID.ExplodingBullet),
+        FunkyModifier.CustomBulletAmmo(ProjectileID.BulletHighVelocity, ItemID.HighVelocityBullet),
         FunkyModifier.ApplyDebuff(BuffID.Poisoned, 30f),
         FunkyModifier.ApplyDebuff(BuffID.OnFire),
         FunkyModifier.DropMoreMana(2),
@@ -111,7 +113,7 @@ public partial class FunkyModifierItemModifier : GlobalItem
             FunkyModifierType.Damage => [ModCategory.Generic],
             FunkyModifierType.ProjectileVelocity => [ModCategory.Projectile],
             FunkyModifierType.AttackSpeed => [ModCategory.Generic],
-            FunkyModifierType.Size => [ModCategory.Sword, ModCategory.Projectile],
+            FunkyModifierType.Size => [ModCategory.Sword],
             FunkyModifierType.ManaCost => [ModCategory.Mana],
             FunkyModifierType.ImbuedDamage => [ModCategory.Mana],
             FunkyModifierType.FrenzyFire => [ModCategory.Generic],
@@ -175,6 +177,7 @@ public partial class FunkyModifierItemModifier : GlobalItem
         (ItemID.HeatRay, [ModCategory.Projectile, ModCategory.Mana]),
         (ItemID.WaterBolt, [ModCategory.Projectile, ModCategory.Mana]),
         (ItemID.EmeraldStaff, [ModCategory.Projectile, ModCategory.Mana]),
+        (ItemID.AmberStaff, [ModCategory.Projectile, ModCategory.Mana]),
         (ItemID.RubyStaff, [ModCategory.Projectile, ModCategory.Mana]),
         (ItemID.LaserRifle, [ModCategory.Projectile, ModCategory.Mana]),
         (ItemID.SharpTears, [ModCategory.Projectile, ModCategory.Mana]),
@@ -198,6 +201,45 @@ public partial class ProjectileFunker : GlobalProjectile
 /// </summary>
 public struct FunkyModifier(FunkyModifierType type, float modifier)
 {
+    private static Dictionary<FunkyModifierType, LocalizedText> _localization;
+    internal static void LoadLocalization(Mod mod)
+    {
+        _localization = new Dictionary<FunkyModifierType, LocalizedText>();
+        foreach(FunkyModifierType type in Enum.GetValues<FunkyModifierType>())
+        {
+            //mod1Text = {0}
+            //mod2Text = {1}
+            //id-Localized = {2}
+            //modifier = {3}
+            string @default = type switch
+            {
+                FunkyModifierType.Damage => "{0}% damage",
+                FunkyModifierType.ProjectileVelocity => "{0}% projectile speed",
+                FunkyModifierType.AttackSpeed => "{0}% attack speed",
+                FunkyModifierType.Size => "{0}% weapon size",
+                FunkyModifierType.ManaCost => "{0}% mana cost",
+                FunkyModifierType.ImbuedDamage => "{0}% damage, {1}% mana cost",
+                FunkyModifierType.FrenzyFire => "{0}% damage, {0}% attack speed",
+                FunkyModifierType.DamageOnDebuff => "{0}% damage vs targets afflicted by {2}",// {Terraria.Lang.GetBuffName(id)}";
+                FunkyModifierType.CustomAmmoBullet => "Weapon fires {2}",
+                    // string localizedText = Terraria.Lang.GetProjectileName(id).Value;
+                    // if (id == ProjectileID.ExplosiveBullet) {
+                    //     localizedText = "Explosive Bullet";
+                    // }
+                    // if (id == ProjectileID.BulletHighVelocity) {
+                    //     localizedText = "High Velocity Bullet";
+                    // }
+                FunkyModifierType.ApplyDebuff => "Inflicts {2} for {3} seconds",
+                    //"Inflict {Terraria.Lang.GetBuffName(id)} for {modifier/60:0.0} sec";
+                FunkyModifierType.CritsExplode => "Critical strikes are explosive",
+                FunkyModifierType.DropMoreMana => "Enemies drop {0}% more Mana Stars when hit",
+                _ => string.Empty,
+            };
+            if (string.IsNullOrEmpty(@default)) continue;
+            _localization.Add(type, Language.GetOrRegister(mod.GetLocalizationKey($"Tooltips.Modifiers.{type.ToString()}"), () => @default));
+        }
+    }
+    
     public FunkyModifierType modifierType = type;
 
     /// <summary>
@@ -256,10 +298,11 @@ public struct FunkyModifier(FunkyModifierType type, float modifier)
             id = buffID,
         };
 
-    public static FunkyModifier CustomBulletAmmo(int ammoItemID) =>
+    public static FunkyModifier CustomBulletAmmo(int projID, int ammoID) =>
         new FunkyModifier(FunkyModifierType.CustomAmmoBullet, 0f) with
         {
-            id = ammoItemID,
+            id = ammoID,
+            intModifier = projID,
         };
 
     public static FunkyModifier ApplyDebuff(int buffID, float timeSeconds = 10f) =>
@@ -275,58 +318,27 @@ public struct FunkyModifier(FunkyModifierType type, float modifier)
 
 	public override string ToString()
 	{
-		string s = "";
-        // s += $"[{modifierType}] ";
 		float mod1 = (modifier - 1) * 100;
 		string mod1Text = $"{mod1:+#.#;-#.#;0.0}";
 		float mod2 = (secondaryModifier - 1) * 100;
-		string mod2Text = $"{mod2:+#.#;-#.#;0.0}";
-		switch (modifierType)
-		{
-			case FunkyModifierType.Damage:
-				s += $"{mod1Text}% damage";
-				break;
-			case FunkyModifierType.ProjectileVelocity:
-				s += $"{mod1Text}% projectile speed";
-				break;
-			case FunkyModifierType.AttackSpeed:
-				s += $"{mod1Text}% attack speed";
-				break;
-			case FunkyModifierType.Size:
-				s += $"{mod1Text}% weapon size";
-				break;
-			case FunkyModifierType.ManaCost:
-				s += $"{mod1Text}% mana cost";
-				break;
-			case FunkyModifierType.ImbuedDamage:
-				s += $"{mod1Text}% damage, {mod2Text}% mana cost";
-				break;
-			case FunkyModifierType.FrenzyFire:
-				s += $"{mod1Text}% damage, {mod2Text}% attack speed";
-				break;
-			case FunkyModifierType.DamageOnDebuff:
-				s += $"{mod1Text}% damage vs targets afflicted by {Terraria.Lang.GetBuffName(id)}";
-				break;
-            case FunkyModifierType.CustomAmmoBullet:
-                string localizedText = Terraria.Lang.GetProjectileName(id).Value;
-                if (id == ProjectileID.ExplosiveBullet) {
-                    localizedText = "Explosive Bullet";
-                }
-                if (id == ProjectileID.BulletHighVelocity) {
-                    localizedText = "High Velocity Bullet";
-                }
-                s += $"Weapon fires {localizedText}s";
-				break;
-			case FunkyModifierType.ApplyDebuff:
-				s += $"Inflict {Terraria.Lang.GetBuffName(id)} for {modifier/60:0.0} sec";
-				break;
-			case FunkyModifierType.CritsExplode:
-				s += $"Critical strikes cause explosions";
-				break;
-			case FunkyModifierType.DropMoreMana:
-				s += $"Enemies drop {mod1Text}% more Mana Stars when hit";
-				break;
-		}
-		return s;
+        string mod2Text = $"{mod2:+#.#;-#.#;0.0}";
+        string idText = modifierType switch
+        {
+            FunkyModifierType.ApplyDebuff => Terraria.Lang.GetBuffName(id),
+            FunkyModifierType.DamageOnDebuff => Terraria.Lang.GetBuffName(id),
+
+            FunkyModifierType.CustomAmmoBullet => Terraria.Lang.GetItemNameValue(id),
+            FunkyModifierType.CustomAmmoArrow => Terraria.Lang.GetItemNameValue(id),
+            FunkyModifierType.CustomAmmoRocket => Terraria.Lang.GetItemNameValue(id),
+
+            _ => string.Empty,
+        };
+        string modifierText = modifierType switch
+        {
+            FunkyModifierType.ApplyDebuff => $"{modifier / 60:0.0}",
+
+            _ => string.Empty,
+        };
+        return _localization.GetValueOrDefault(modifierType, LocalizedText.Empty).Format(mod1Text, mod2Text, idText, modifierText);
 	}
 }

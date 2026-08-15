@@ -203,6 +203,7 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Hive
 
             if (npc.ai[0] > (24 * 3.5f))
             {
+                npc.DoAttackWarning();
                 npc.ai[0] = 0;
                 npc.ai[1] = 3;
                 npc.ai[2] = MathF.Sign(target.position.X - npc.position.X) * MathF.Sqrt(MathF.Abs(target.position.X - npc.position.X)) * 0.0425f;

@@ -6,11 +6,20 @@ using System.Linq;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using TerrariaCells.Common.GlobalNPCs;
 
 namespace TerrariaCells.Common.Globals
 {
 	public class HealthItem : GlobalItem
 	{
+        public override void SetStaticDefaults()
+        {
+            foreach(int type in DropFoodHeals.TIER_ONE_FOOD.Concat(DropFoodHeals.TIER_TWO_FOOD).Concat(DropFoodHeals.TIER_THREE_FOOD))
+            {
+				ItemID.Sets.IgnoresEncumberingStone[type] = true;
+            }
+        }
+
 		private const bool _DO_FOOD_HIGHLIGHTS = true;
 		public override bool PreDrawInWorld(Item item, SpriteBatch spriteBatch, Color lightColor, Color alphaColor, ref float rotation, ref float scale, int whoAmI)
 		{
@@ -38,8 +47,8 @@ namespace TerrariaCells.Common.Globals
 				for (int i = 0; i < strength; i++)
 				{
 					data.scale *= new Vector2(0.8f, 1.25f);
-					data.rotation = item.timeSinceItemSpawned * ((int)(-0.75f * (i * i) + 2f)) * 0.02f;
-					data.Draw(Main.spriteBatch);
+					data.rotation = ((float)Main.timeForVisualEffects) * ((int)(-0.75f * (i * i) + 2f)) * 0.02f;
+					data.Draw(spriteBatch);
 				}
 				//Main.spriteBatch.Draw(glow, item.Center - Main.screenPosition, null, Color.Wheat, item.timeSinceItemSpawned * 0.15707f, glow.Size() * 0.5f, new Vector2(((item.position.X % 4 + 4) * 0.0867f), ((item.position.Y % 8 + 8) * 0.0867f)), SpriteEffects.None, 0);
 				return true;

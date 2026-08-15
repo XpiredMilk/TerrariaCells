@@ -75,6 +75,10 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Crimson
             npc.rotation += npc.velocity.X;
             npc.ai[0]++;
 
+            if(npc.ai[0] == 35)
+            {
+                npc.DoAttackWarning();
+            }
             if (npc.ai[0] > 45 && Main.netMode != NetmodeID.MultiplayerClient)
             {
                 npc.StrikeInstantKill();

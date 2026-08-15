@@ -17,6 +17,9 @@ using TerrariaCells.Common.Utilities;
 using static TerrariaCells.Common.Utilities.NumberHelpers;
 using static TerrariaCells.Common.Systems.AbilityConditions;
 using TerrariaCells.Common.ModPlayers;
+using TerrariaCells.Common.GlobalItems;
+using Terraria.Localization;
+using Terraria.WorldBuilding;
 
 //Genuinely, I'm just using this for anything that I deem sufficiently complex
 //Involving multiple parts working together to form one collective piece (a "system of parts" if you will)
@@ -49,8 +52,15 @@ namespace TerrariaCells.Common.Systems
 						if (new int[] { ProjectileID.SporeGas, ProjectileID.SporeGas2, ProjectileID.SporeGas3 }.Contains(proj.type))
 							proj.Kill();
 				};
+			RegisterAbility(ItemID.Beenade, new Ability(NumberHelpers.SecToFrames(10)));
+			RegisterAbility(ItemID.HornetStaff, new Ability(NumberHelpers.SecToFrames(30), NumberHelpers.SecToFrames(30)));
+			RegisterAbility(ItemID.SlimeStaff, new Ability(NumberHelpers.SecToFrames(30), NumberHelpers.SecToFrames(30)));
+			RegisterAbility(ItemID.ImpStaff, new Ability(NumberHelpers.SecToFrames(30), NumberHelpers.SecToFrames(30)));
+			RegisterAbility(ItemID.Grenade, new Ability(NumberHelpers.SecToFrames(5)));
 			RegisterAbility(ItemID.StaffoftheFrostHydra, new Ability(NumberHelpers.SecToFrames(30), 10.SecToFrames()));
 			RegisterAbility(ItemID.DD2ExplosiveTrapT1Popper, new Ability(NumberHelpers.SecToFrames(30), 30.SecToFrames(), new LineOfSight(), new InSolidTile().Invert()));
+			RegisterAbility(ItemID.DD2LightningAuraT1Popper, new Ability(NumberHelpers.SecToFrames(60), NumberHelpers.SecToFrames(30)));
+			RegisterAbility(ItemID.DD2FlameburstTowerT1Popper, new Ability(NumberHelpers.SecToFrames(60), NumberHelpers.SecToFrames(30)));
 			RegisterAbility(ItemID.MolotovCocktail, new Ability(NumberHelpers.SecToFrames(15)));
 			RegisterAbility(ItemID.BouncyDynamite, new Ability(NumberHelpers.SecToFrames(60)));
 			//RegisterAbility(ItemID.BouncingShield, new Ability(NumberHelpers.SecToFrames(6)));
@@ -60,6 +70,7 @@ namespace TerrariaCells.Common.Systems
 			RegisterAbility(ItemID.WrathPotion, new Ability(NumberHelpers.SecToFrames(60), 20.SecToFrames()));
 			RegisterAbility(ItemID.MagicPowerPotion, new Ability(NumberHelpers.SecToFrames(100), 10.SecToFrames()));
 			RegisterAbility(ItemID.SwiftnessPotion, new Ability(NumberHelpers.SecToFrames(60), 20.SecToFrames()));
+			RegisterAbility(ItemID.InfernoPotion, new Ability(NumberHelpers.SecToFrames(80), 20.SecToFrames()));
             //RegisterAbility(ItemID.LifeCrystal, new Ability(0));
 		}
 
@@ -301,7 +312,7 @@ namespace TerrariaCells.Common.Systems
 		public class LineOfSight : AbilityCondition
 		{
 			public override bool CheckCondition(Player player)
-				=> Collision.CanHitLine(player.position, player.width, player.height, Main.MouseWorld, 1, 1);
+				=> Collision.CanHitLine(player.position, player.width, player.height, Main.MouseWorld, 16, 16);
 		}
 		public class InSolidTile : AbilityCondition
 		{
@@ -402,7 +413,6 @@ namespace TerrariaCells.Common.Systems
 			}
 		}
 
-
 		//Try to get the selected ability with 'Player.selectedItem'
 		public static bool TryGetSelectedAbility(Player player, out AbilitySlot ability)
 		{
@@ -433,8 +443,13 @@ namespace TerrariaCells.Common.Systems
 			switch (item.type)
 			{
 				case ItemID.StormTigerStaff:
-					item.damage = 10;
+				case ItemID.SlimeStaff:
+					item.damage = 6;
 					break;
+				case ItemID.ImpStaff:
+					item.damage = 7;
+					break;
+				case ItemID.Beenade:
 				case ItemID.ClingerStaff:
 					item.damage = 10;
 					break;
@@ -450,8 +465,20 @@ namespace TerrariaCells.Common.Systems
 				case ItemID.DD2ExplosiveTrapT1Popper:
 					item.damage = 50;
 					break;
+				case ItemID.DD2LightningAuraT1Popper:
+					item.damage = 7;
+					break;
+				case ItemID.DD2FlameburstTowerT1Popper:
+					item.damage = 10;
+					break;
 				case ItemID.ManaPotion:
 					item.healMana = 200;
+					break;
+				case ItemID.InfernoPotion:
+					item.damage = 5;
+					break;
+				case ItemID.Grenade:
+					item.damage = 40;
 					break;
 			}
 			if (item.buffType != 0 && item.buffTime != 0)
@@ -497,26 +524,48 @@ namespace TerrariaCells.Common.Systems
 					break;
 				}
 			}
-			return null;
+
+			//Pygmy necklace effect
+			if (player.GetModPlayer<AccessoryPlayer>().pygmyNecklace && item.DamageType == DamageClass.Summon)
+			{
+				player.maxMinions = 4;
+				if (player.slotsMinions <= player.maxMinions)
+				{
+					Projectile.NewProjectileDirect(player.GetSource_FromThis(), player.Center, Vector2.Zero, item.shoot, item.damage, item.knockBack, Main.myPlayer);
+				}
+			}
+			return true;
 		}
 
+		public override void ModifyWeaponDamage(Item item, Player player, ref StatModifier damage)
+		{
+			if (player.GetModPlayer<AccessoryPlayer>().heracles)
+			{
+				damage += 0.5f;
+			}
+		}
+		
+		private static LocalizedText Local_Duration;
+		private static LocalizedText Local_Cooldown;
 		public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
 		{
-            tooltips.Find(x => x.Name.Equals("EtherianManaWarning"))?.Hide();
-            tooltips.Find(x => x.Name.Equals("BuffTime"))?.Hide();
-		}
-
-        public override void ModifyWeaponDamage(Item item, Player player, ref StatModifier damage)
-        {
-            if (player.GetModPlayer<AccessoryPlayer>().heracles)
-            {
-                damage += 0.5f;
-            }
+			if (!Ability.IsAbility(item.type)) return;
+			Ability info = Ability.AbilityList[item.type];
+			if (info.Cooldown > 0)
+				tooltips.InsertTooltip(new TooltipLine(Mod, "AbilityCooldown", Local_Cooldown.Format($"{info.Cooldown / 60f:0.0}")));
+			if(info.Duration > 0)
+				tooltips.InsertTooltip(new TooltipLine(Mod, "AbilityDuration", Local_Duration.Format($"{info.Duration / 60f:0.0}")));
         }
-        #endregion
-
-        public override void Load()
+		#endregion
+		public override void Load()
 		{
+			//ItemTooltips.InsertTooltip("AbilityDuration", "Damage");
+			//ItemTooltips.InsertTooltip("AbilityCooldown", "Damage");
+			Local_Duration = Language.GetOrRegister(Mod.GetLocalizationKey("Tooltips.AbilityDuration"), () => "Duration {0} second(s)");
+			Local_Cooldown = Language.GetOrRegister(Mod.GetLocalizationKey("Tooltips.AbilityCooldown"), () => "Cooldown {0} second(s)");
+			TooltipReorganization.LoadTooltip("AbilityCooldown", "Damage");
+			TooltipReorganization.LoadTooltip("AbilityDuration", "Damage");
+
 			//IL_ItemSlot.Draw_SpriteBatch_ItemArray_int_int_Vector2_Color += IL_ItemSlot_Draw_SpriteBatch_ItemArray_int_int_Vector2_Color;
 
 			// Hook to prevent items from being picked up while the skill slot is on cooldown
@@ -532,7 +581,6 @@ namespace TerrariaCells.Common.Systems
 			// Hooks to prevent non-skill items from being picked up into a skill slot
 			On_Player.GetItem_FillEmptyInventorySlot += On_Player_GetItem_FillEmptyInventorySlot;
 		}
-
 		public override void Unload()
 		{
 			//IL_ItemSlot.Draw_SpriteBatch_ItemArray_int_int_Vector2_Color -= IL_ItemSlot_Draw_SpriteBatch_ItemArray_int_int_Vector2_Color;
@@ -570,8 +618,10 @@ namespace TerrariaCells.Common.Systems
 				c.Emit(Mono.Cecil.Cil.OpCodes.Ldarg_2); // Context
 
 				// Emit the delegate (the code)
-				c.EmitDelegate<Func<Item[], int, Texture2D, int, Texture2D>>((inv, slot, originalTexture, context) => {
-					try {
+				c.EmitDelegate<Func<Item[], int, Texture2D, int, Texture2D>>((inv, slot, originalTexture, context) =>
+				{
+					try
+					{
 						if (Main.gameMenu)
 							return originalTexture;
 						if (!Configs.DevConfig.Instance.EnableInventoryChanges)
@@ -590,11 +640,13 @@ namespace TerrariaCells.Common.Systems
 							}
 
 						}
-                    } catch (IndexOutOfRangeException) {
+					}
+					catch (IndexOutOfRangeException)
+					{
 						// prevent main engine crash on player select
 					}
 
-                    return originalTexture;
+					return originalTexture;
 				});
 
 				// Emit return value

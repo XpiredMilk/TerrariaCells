@@ -117,7 +117,7 @@ namespace TerrariaCells.Content.Projectiles
             Vector2 armPos = owner.GetFrontHandPosition(Player.CompositeArmStretchAmount.Full, rot);
 
             Asset<Texture2D> t = TextureAssets.Item[owner.HeldItem.type];
-            float distance = t.Size().Length() + (owner.direction == -1 ? 15 : 10);
+            float distance = (t.Size().Length() + (owner.direction == -1 ? 15 : 10)) * Projectile.scale;
 
             Projectile.rotation = rot;
 
@@ -133,6 +133,7 @@ namespace TerrariaCells.Content.Projectiles
                     TCellsUtils.LerpEasing.OutQuint
                 );
 
+/*          doesn't work with weapon size scaling
             Projectile.scale = TCellsUtils.LerpFloat(
                 0.5f,
                 1,
@@ -140,6 +141,7 @@ namespace TerrariaCells.Content.Projectiles
                 Projectile.ai[1],
                 TCellsUtils.LerpEasing.DownParabola
             );
+*/
             Projectile.Opacity = TCellsUtils.LerpFloat(
                 0f,
                 1,

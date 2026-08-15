@@ -211,6 +211,7 @@ namespace TerrariaCells.Common.GlobalNPCs.NPCTypes.Caverns
 
 			if (npc.ai[0] > 45)
 			{
+				npc.DoAttackWarning();
 				npc.ai[1] = ThrowHands;
 				npc.ai[0] = 0;
                 npc.netUpdate = true;
